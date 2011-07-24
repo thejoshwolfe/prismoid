@@ -1,9 +1,17 @@
 
 #include <SFML/Graphics.hpp>
 
+static sf::RenderWindow * main_window;
+
+void resized(const sf::Event::SizeEvent & size)
+{
+    sf::View * default_view = &main_window->GetDefaultView();
+    default_view->SetHalfSize(size.Width / 2, size.Height / 2);
+}
+
 int main()
 {
-    sf::RenderWindow * main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
+    main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
     main_window->UseVerticalSync(true);
 
     while (main_window->IsOpened()) {
@@ -14,7 +22,7 @@ int main()
                     main_window->Close();
                     break;
                 case sf::Event::Resized:
-                    glViewport(0, 0, event.Size.Width, event.Size.Height);
+                    resized(event.Size);
                     break;
                 case sf::Event::KeyPressed:
                     // only check for closing here
@@ -23,6 +31,15 @@ int main()
                     break;
             }
         }
+
+        const sf::Input * input = &main_window->GetInput();
+        if (input->IsKeyDown(sf::Key::Up)) main_window->GetDefaultView().Move(0, -5);
+        if (input->IsKeyDown(sf::Key::Left)) main_window->GetDefaultView().Move(-5, 0);
+        if (input->IsKeyDown(sf::Key::Down)) main_window->GetDefaultView().Move(0, 5);
+        if (input->IsKeyDown(sf::Key::Right)) main_window->GetDefaultView().Move(5, 0);
+
+        if (input->IsKeyDown(sf::Key::Comma)) main_window->GetDefaultView().Zoom(0.9f);
+        if (input->IsKeyDown(sf::Key::Period)) main_window->GetDefaultView().Zoom(1.0f / 0.9f);
 
         main_window->Clear();
 
