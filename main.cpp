@@ -1,15 +1,20 @@
 
-#include <SFML/Window.hpp>
-
-void init_opengl();
-void draw(float elapsed_time);
+#include <SFML/Graphics.hpp>
 
 int main()
 {
-    sf::Window main_window(sf::VideoMode(800, 600, 32), "grinch");
+    sf::RenderWindow main_window(sf::VideoMode(800, 600, 32), "grinch");
     main_window.UseVerticalSync(true);
-    sf::Clock clock;
-    init_opengl();
+
+    sf::Image * image = new sf::Image;
+    if (!image->LoadFromFile("sample.png"))
+        return 1;
+
+    sf::Sprite * sprite = new sf::Sprite(*image);
+    //sprite->SetColor(sf::Color(0, 255, 255, 128));
+    sprite->SetPosition(200.f, 100.f);
+    sprite->SetScale(2.f, 2.f);
+
     while (main_window.IsOpened()) {
         sf::Event event;
         while (main_window.GetEvent(event)) {
@@ -28,73 +33,22 @@ int main()
             }
         }
 
-        draw(clock.GetElapsedTime());
+        float elapsed_time = main_window.GetFrameTime();
 
+        // Move the sprite
+        const sf::Input * input = &main_window.GetInput();
+        if (input->IsKeyDown(sf::Key::Left))  sprite->Move(-100 * elapsed_time, 0);
+        if (input->IsKeyDown(sf::Key::Right)) sprite->Move( 100 * elapsed_time, 0);
+        if (input->IsKeyDown(sf::Key::Up))    sprite->Move(0, -100 * elapsed_time);
+        if (input->IsKeyDown(sf::Key::Down))  sprite->Move(0,  100 * elapsed_time);
+        // Rotate the sprite
+        if (input->IsKeyDown(sf::Key::Add))      sprite->Rotate(- 100 * elapsed_time);
+        if (input->IsKeyDown(sf::Key::Subtract)) sprite->Rotate(+ 100 * elapsed_time);
+
+        main_window.Clear();
+        main_window.Draw(*sprite);
         main_window.Display();
     }
     return 0;
-}
-
-void init_opengl()
-{
-    // Set color and depth clear value
-    glClearDepth(1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    // Enable Z-buffer read and write
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-
-    // Setup a perspective projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90.0f, 1.0f, 1.0f, 500.0f);
-}
-
-void draw(float elapsed_time)
-{
-    // Clear color and depth buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // Apply some transformations
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0.f, 0.f, -200.f);
-    glRotatef(elapsed_time * 50, 1.f, 0.f, 0.f);
-    glRotatef(elapsed_time * 30, 0.f, 1.f, 0.f);
-    glRotatef(elapsed_time * 90, 0.f, 0.f, 1.f);
-
-    glBegin(GL_QUADS); {
-        glVertex3f(-50.f, -50.f, -50.f);
-        glVertex3f(-50.f,  50.f, -50.f);
-        glVertex3f( 50.f,  50.f, -50.f);
-        glVertex3f( 50.f, -50.f, -50.f);
-
-        glVertex3f(-50.f, -50.f, 50.f);
-        glVertex3f(-50.f,  50.f, 50.f);
-        glVertex3f( 50.f,  50.f, 50.f);
-        glVertex3f( 50.f, -50.f, 50.f);
-
-        glVertex3f(-50.f, -50.f, -50.f);
-        glVertex3f(-50.f,  50.f, -50.f);
-        glVertex3f(-50.f,  50.f,  50.f);
-        glVertex3f(-50.f, -50.f,  50.f);
-
-        glVertex3f(50.f, -50.f, -50.f);
-        glVertex3f(50.f,  50.f, -50.f);
-        glVertex3f(50.f,  50.f,  50.f);
-        glVertex3f(50.f, -50.f,  50.f);
-
-        glVertex3f(-50.f, -50.f,  50.f);
-        glVertex3f(-50.f, -50.f, -50.f);
-        glVertex3f( 50.f, -50.f, -50.f);
-        glVertex3f( 50.f, -50.f,  50.f);
-
-        glVertex3f(-50.f, 50.f,  50.f);
-        glVertex3f(-50.f, 50.f, -50.f);
-        glVertex3f( 50.f, 50.f, -50.f);
-        glVertex3f( 50.f, 50.f,  50.f);
-    } glEnd();
-
 }
 
