@@ -1,0 +1,6 @@
+
+Setting up the build:
+    http://www.sfml-dev.org/tutorials/1.6/
+Short version for Ubuntu (untested):
+    $ sudo apt-get install libcsfml-audio1.6 libcsfml-dev libcsfml-graphics1.6 libcsfml-network1.6 libcsfml-system1.6 libcsfml-window1.6 libsfml-audio1.6 libsfml-dev libsfml-graphics1.6 libsfml-network1.6 libsfml-system1.6 libsfml-window1.6
+
