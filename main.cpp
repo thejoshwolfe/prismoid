@@ -5,9 +5,13 @@ static sf::RenderWindow * main_window;
 
 void resized(const sf::Event::SizeEvent & size)
 {
-    sf::View * default_view = &main_window->GetDefaultView();
-    default_view->SetHalfSize(size.Width / 2, size.Height / 2);
+    main_window->GetDefaultView().SetHalfSize(size.Width / 2, size.Height / 2);
 }
+
+static float position_x = 0;
+static float position_y = 0;
+static float velocity_x = 0;
+static float velocity_y = 0;
 
 int main()
 {
@@ -18,6 +22,7 @@ int main()
     if (!image->LoadFromFile("sample.png"))
         return 1;
     sf::Sprite * sprite = new sf::Sprite(*image);
+    sprite->SetCenter(image->GetWidth() / 2, image->GetHeight() / 2);
     sprite->SetPosition(10, 10);
     sprite->SetScale(1.0f / 8, 1.0f / 8);
 
@@ -31,22 +36,33 @@ int main()
                 case sf::Event::Resized:
                     resized(event.Size);
                     break;
-                case sf::Event::KeyPressed:
+                case sf::Event::KeyPressed: {
                     // only check for closing here
-                    if (event.Key.Code == sf::Key::Escape || (event.Key.Alt && event.Key.Code == sf::Key::F4))
+                    bool alt_f4 = event.Key.Alt && event.Key.Code == sf::Key::F4;
+                    if (event.Key.Code == sf::Key::Escape || alt_f4) {
                         main_window->Close();
+                        goto break_main_loop;
+                    }
                     break;
+                }
             }
         }
 
-        const sf::Input * input = &main_window->GetInput();
-        if (input->IsKeyDown(sf::Key::Up)) main_window->GetDefaultView().Move(0, -5);
-        if (input->IsKeyDown(sf::Key::Left)) main_window->GetDefaultView().Move(-5, 0);
-        if (input->IsKeyDown(sf::Key::Down)) main_window->GetDefaultView().Move(0, 5);
-        if (input->IsKeyDown(sf::Key::Right)) main_window->GetDefaultView().Move(5, 0);
+        float elapsed_time = main_window->GetFrameTime();
 
-        if (input->IsKeyDown(sf::Key::Comma)) main_window->GetDefaultView().Zoom(0.9f);
-        if (input->IsKeyDown(sf::Key::Period)) main_window->GetDefaultView().Zoom(1.0f / 0.9f);
+        const sf::Input * input = &main_window->GetInput();
+        if (input->IsKeyDown(sf::Key::W)) velocity_y -= elapsed_time * 2000.0f;
+        if (input->IsKeyDown(sf::Key::A)) velocity_x -= elapsed_time * 2000.0f;
+        if (input->IsKeyDown(sf::Key::S)) velocity_y += elapsed_time * 2000.0f;
+        if (input->IsKeyDown(sf::Key::D)) velocity_x += elapsed_time * 2000.0f;
+        position_x += elapsed_time * velocity_x;
+        position_y += elapsed_time * velocity_y;
+        sprite->SetPosition(position_x, position_y);
+
+        sf::View * view = &main_window->GetDefaultView();
+        view->SetCenter(position_x, position_y);
+        if (input->IsKeyDown(sf::Key::Comma)) view->Zoom(0.98f);
+        if (input->IsKeyDown(sf::Key::Period)) view->Zoom(1.0f / 0.98f);
 
         main_window->Clear();
 
@@ -57,6 +73,7 @@ int main()
 
         main_window->Display();
     }
+    break_main_loop:
     return 0;
 }
 
