@@ -14,6 +14,13 @@ int main()
     main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
     main_window->UseVerticalSync(true);
 
+    sf::Image * image = new sf::Image();
+    if (!image->LoadFromFile("sample.png"))
+        return 1;
+    sf::Sprite * sprite = new sf::Sprite(*image);
+    sprite->SetPosition(10, 10);
+    sprite->SetScale(1.0f / 8, 1.0f / 8);
+
     while (main_window->IsOpened()) {
         sf::Event event;
         while (main_window->GetEvent(event)) {
@@ -46,6 +53,7 @@ int main()
         main_window->Draw(sf::Shape::Line(10, 10, 710, 100, 15, sf::Color::Red));
         main_window->Draw(sf::Shape::Circle(200, 200, 100, sf::Color::Yellow, 10, sf::Color::Blue));
         main_window->Draw(sf::Shape::Rectangle(350, 200, 600, 350, sf::Color::Green));
+        main_window->Draw(*sprite);
 
         main_window->Display();
     }
