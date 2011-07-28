@@ -45,6 +45,7 @@ int main()
                     }
                     break;
                 }
+                default:;
             }
         }
 

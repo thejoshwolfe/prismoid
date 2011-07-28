@@ -1,8 +1,13 @@
 
 This project does nothing so far.
 
-Setting up the build:
+Build it with qmake.
+
+Download a sample image called sample.png and put it in the build dir. this url will work:
+    http://bak.ndla.no/cgi-bin/trac.cgi/export/333/modules/3rdparty/drupal/imagecache-6.x-2.0-beta10/sample.png
+
+Installing sfml:
     http://www.sfml-dev.org/tutorials/1.6/
-Short version for Ubuntu (untested):
+    Short version for Ubuntu (untested):
     $ sudo apt-get install libcsfml-audio1.6 libcsfml-dev libcsfml-graphics1.6 libcsfml-network1.6 libcsfml-system1.6 libcsfml-window1.6 libsfml-audio1.6 libsfml-dev libsfml-graphics1.6 libsfml-network1.6 libsfml-system1.6 libsfml-window1.6
 
