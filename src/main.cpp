@@ -47,17 +47,24 @@ int main()
         if (input->IsKeyDown(sf::Key::A)) entity->velocity.x -= elapsed_time * 2000.0f;
         if (input->IsKeyDown(sf::Key::S)) entity->velocity.y += elapsed_time * 2000.0f;
         if (input->IsKeyDown(sf::Key::D)) entity->velocity.x += elapsed_time * 2000.0f;
-        entity->center.x += elapsed_time * entity->velocity.x;
-        entity->center.y += elapsed_time * entity->velocity.y;
 
         sf::View * view = &main_window->GetDefaultView();
-        view->SetCenter(entity->center.x, entity->center.y);
         if (input->IsKeyDown(sf::Key::Comma)) view->Zoom(0.98f);
         if (input->IsKeyDown(sf::Key::Period)) view->Zoom(1.0f / 0.98f);
 
+        const float floor = 300;
+        entity->velocity.y += 10;
+        entity->center.x += elapsed_time * entity->velocity.x;
+        entity->center.y += elapsed_time * entity->velocity.y;
+        if (entity->center.y >= floor) {
+            entity->center.y = floor;
+            entity->velocity.y *= -0.5;
+        }
+
+        view->SetCenter(entity->center.x, entity->center.y);
+
         main_window->Clear();
 
-        const float floor = 700;
         main_window->Draw(sf::Shape::Line(0, floor, 500, floor, 1, sf::Color::Red));
         sf::Drawable * drawable = entity->toDrawable();
         main_window->Draw(*drawable);
