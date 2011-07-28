@@ -4,10 +4,38 @@
 #include "Entity.h"
 
 static sf::RenderWindow * main_window;
+static const float floor_y = 300;
 
 void resized(const sf::Event::SizeEvent & size)
 {
     main_window->GetDefaultView().SetHalfSize(size.Width / 2, size.Height / 2);
+}
+
+void doFrame(Entity * entity)
+{
+    const sf::Input * input = &main_window->GetInput();
+    float move_acceleration = 0.4f;
+    if (input->IsKeyDown(sf::Key::W)) entity->velocity.y -= move_acceleration;
+    if (input->IsKeyDown(sf::Key::A)) entity->velocity.x -= move_acceleration;
+    if (input->IsKeyDown(sf::Key::S)) entity->velocity.y += move_acceleration;
+    if (input->IsKeyDown(sf::Key::D)) entity->velocity.x += move_acceleration;
+
+    sf::View * view = &main_window->GetDefaultView();
+    float zoom_speed = 0.999f;
+    if (input->IsKeyDown(sf::Key::Comma)) view->Zoom(zoom_speed);
+    if (input->IsKeyDown(sf::Key::Period)) view->Zoom(1.0f / zoom_speed);
+
+    float gravity = 0.2;
+    entity->velocity.y += gravity;
+    entity->center.x += entity->velocity.x;
+    entity->center.y += entity->velocity.y;
+    if (entity->center.y >= floor_y) {
+        // collision with ground
+        entity->center.y = floor_y;
+        entity->velocity.y *= -0.5;
+    }
+
+    view->SetCenter(entity->center.x, entity->center.y);
 }
 
 int main()
@@ -17,8 +45,10 @@ int main()
 
     Entity * entity = new Entity(sf::Vector2f(0, 0), sf::Vector2f(30, 30));
 
+    bool frame_advance_mode = false;
     while (main_window->IsOpened()) {
         sf::Event event;
+        bool do_frame = !frame_advance_mode;
         while (main_window->GetEvent(event)) {
             switch (event.Type) {
                 case sf::Event::Closed:
@@ -34,42 +64,23 @@ int main()
                         main_window->Close();
                         goto break_main_loop;
                     }
+                    if (event.Key.Code == sf::Key::F12)
+                        frame_advance_mode = !frame_advance_mode;
+                    if (frame_advance_mode && event.Key.Code == sf::Key::Space)
+                        do_frame = true;
                     break;
                 }
                 default:;
             }
         }
 
-        float elapsed_time = main_window->GetFrameTime();
-
-        const sf::Input * input = &main_window->GetInput();
-        if (input->IsKeyDown(sf::Key::W)) entity->velocity.y -= elapsed_time * 2000.0f;
-        if (input->IsKeyDown(sf::Key::A)) entity->velocity.x -= elapsed_time * 2000.0f;
-        if (input->IsKeyDown(sf::Key::S)) entity->velocity.y += elapsed_time * 2000.0f;
-        if (input->IsKeyDown(sf::Key::D)) entity->velocity.x += elapsed_time * 2000.0f;
-
-        sf::View * view = &main_window->GetDefaultView();
-        if (input->IsKeyDown(sf::Key::Comma)) view->Zoom(0.98f);
-        if (input->IsKeyDown(sf::Key::Period)) view->Zoom(1.0f / 0.98f);
-
-        const float floor = 300;
-        entity->velocity.y += 10;
-        entity->center.x += elapsed_time * entity->velocity.x;
-        entity->center.y += elapsed_time * entity->velocity.y;
-        if (entity->center.y >= floor) {
-            entity->center.y = floor;
-            entity->velocity.y *= -0.5;
-        }
-
-        view->SetCenter(entity->center.x, entity->center.y);
+        if (do_frame)
+            doFrame(entity);
 
         main_window->Clear();
 
-        main_window->Draw(sf::Shape::Line(0, floor, 500, floor, 1, sf::Color::Red));
-        sf::Drawable * drawable = entity->toDrawable();
-        main_window->Draw(*drawable);
-        delete drawable;
-
+        main_window->Draw(sf::Shape::Line(0, floor_y, 500, floor_y, 1, sf::Color::Red));
+        entity->render(main_window);
         main_window->Display();
     }
     break_main_loop:

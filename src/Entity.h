@@ -12,7 +12,7 @@ public:
 
     Entity(const sf::Vector2f & center, const sf::Vector2f & size);
 
-    sf::Drawable * toDrawable();
+    void render(sf::RenderTarget * render_target);
     sf::FloatRect getBoundingBox();
 };
 
