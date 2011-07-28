@@ -3,9 +3,6 @@ This project does nothing so far.
 
 Build it with qmake.
 
-Download a sample image called sample.png and put it in the build dir. this url will work:
-    http://bak.ndla.no/cgi-bin/trac.cgi/export/333/modules/3rdparty/drupal/imagecache-6.x-2.0-beta10/sample.png
-
 Installing sfml:
     http://www.sfml-dev.org/tutorials/1.6/
     Short version for Ubuntu (untested):

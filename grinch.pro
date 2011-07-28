@@ -9,4 +9,8 @@ TEMPLATE = app
 
 LIBS += -lsfml-graphics
 
-SOURCES += src/main.cpp
+SOURCES += src/main.cpp \
+    src/Entity.cpp
+
+HEADERS += \
+    src/Entity.h
