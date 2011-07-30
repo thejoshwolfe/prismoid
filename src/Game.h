@@ -6,7 +6,9 @@
 class Game
 {
 public:
+    long long frame_counter;
     Entity * entity;
+    Game();
 
     void doFrame(const sf::Input * input);
     void render(sf::RenderTarget * render_target);

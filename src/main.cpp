@@ -18,7 +18,8 @@ int main()
 
     Game * game = new Game;
     game->entity = new Entity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Vector2f(0, 0));
-    std::vector<byte> state;
+    std::vector<byte> saved_state;
+    std::vector<std::vector<byte>*> rewind_buffer;
 
     bool frame_advance_mode = false;
     while (main_window->IsOpened()) {
@@ -48,12 +49,16 @@ int main()
                             do_frame = true;
                             break;
                         case sf::Key::F1:
-                            state.clear();
-                            game->saveState(&state);
+                            saved_state.clear();
+                            game->saveState(&saved_state);
                             break;
                         case sf::Key::F2: {
-                            std::vector<byte>::const_iterator buffer = state.begin();
+                            std::vector<byte>::const_iterator buffer = saved_state.begin();
                             game->loadState(&buffer);
+                            int frame_counter = (int)game->frame_counter;
+                            for (int i = frame_counter; i < (int)rewind_buffer.size(); i++)
+                                delete rewind_buffer[i];
+                            rewind_buffer.resize(frame_counter);
                             break;
                         }
                         default:;
@@ -64,8 +69,24 @@ int main()
             }
         }
 
-        if (do_frame)
-            game->doFrame(&main_window->GetInput());
+        if (do_frame) {
+            if (main_window->GetInput().IsKeyDown(sf::Key::Back)) {
+                // rewind
+                if (rewind_buffer.size() != 0) {
+                    std::vector<byte>* last_state = rewind_buffer[rewind_buffer.size() - 1];
+                    std::vector<byte>::const_iterator buffer = last_state->begin();
+                    game->loadState(&buffer);
+                    delete last_state;
+                    rewind_buffer.resize(rewind_buffer.size() - 1);
+                }
+            } else {
+                // forwards
+                game->doFrame(&main_window->GetInput());
+                std::vector<byte>* state = new std::vector<byte>;
+                game->saveState(state);
+                rewind_buffer.push_back(state);
+            }
+        }
 
         main_window->Clear();
 

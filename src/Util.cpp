@@ -13,7 +13,22 @@ float deserializeFloat(std::vector<byte>::const_iterator* buffer)
 {
     float value;
     byte * byte_pointer = reinterpret_cast<byte*>(&value);
-    for (int i = 0; i < (int)sizeof(float); i++, (*buffer)++)
+    for (int i = 0; i < (int)sizeof(value); i++, (*buffer)++)
+        byte_pointer[i] = *(*buffer);
+    return value;
+}
+
+void serialize(std::vector<byte> *buffer, long long value)
+{
+    byte * byte_pointer = reinterpret_cast<byte*>(&value);
+    for (int i = 0; i < (int)sizeof(value); i++)
+        buffer->push_back(byte_pointer[i]);
+}
+long long deserializeLongLong(std::vector<byte>::const_iterator* buffer)
+{
+    long long value;
+    byte * byte_pointer = reinterpret_cast<byte*>(&value);
+    for (int i = 0; i < (int)sizeof(value); i++, (*buffer)++)
         byte_pointer[i] = *(*buffer);
     return value;
 }

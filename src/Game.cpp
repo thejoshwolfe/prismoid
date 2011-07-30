@@ -2,9 +2,15 @@
 
 static const float floor_y = 300;
 
+Game::Game() :
+    frame_counter(0), entity(NULL)
+{
+}
+
 void Game::doFrame(const sf::Input * input)
 {
-    float move_acceleration = 0.4f;
+    frame_counter++;
+    const float move_acceleration = 0.4f;
     if (input->IsKeyDown(sf::Key::W)) entity->velocity.y -= move_acceleration;
     if (input->IsKeyDown(sf::Key::A)) entity->velocity.x -= move_acceleration;
     if (input->IsKeyDown(sf::Key::S)) entity->velocity.y += move_acceleration;
@@ -19,7 +25,6 @@ void Game::doFrame(const sf::Input * input)
         entity->center.y = floor_y;
         entity->velocity.y *= -0.5;
     }
-
 }
 
 void Game::render(sf::RenderTarget *render_target)
@@ -31,10 +36,12 @@ void Game::render(sf::RenderTarget *render_target)
 
 void Game::saveState(std::vector<byte>* buffer)
 {
+    Util::serialize(buffer, frame_counter);
     entity->serialize(buffer);
 }
 void Game::loadState(std::vector<byte>::const_iterator* buffer)
 {
+    frame_counter = Util::deserializeLongLong(buffer);
     delete entity;
     entity = Entity::deserialize(buffer);
 }
