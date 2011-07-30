@@ -18,6 +18,7 @@ int main()
 
     Game * game = new Game;
     game->entity = new Entity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Vector2f(0, 0));
+    long long saved_state_frame_index = -1;
     std::vector<byte> saved_state;
     std::vector<std::vector<byte>*> rewind_buffer;
 
@@ -51,14 +52,17 @@ int main()
                         case sf::Key::F1:
                             saved_state.clear();
                             game->saveState(&saved_state);
+                            saved_state_frame_index = game->frame_counter;
                             break;
                         case sf::Key::F2: {
-                            std::vector<byte>::const_iterator buffer = saved_state.begin();
-                            game->loadState(&buffer);
-                            int frame_counter = (int)game->frame_counter;
-                            for (int i = frame_counter; i < (int)rewind_buffer.size(); i++)
-                                delete rewind_buffer[i];
-                            rewind_buffer.resize(frame_counter);
+                            if (!saved_state.empty()) {
+                                std::vector<byte>::const_iterator buffer = saved_state.begin();
+                                game->loadState(&buffer);
+                                int frame_counter = (int)game->frame_counter;
+                                for (int i = frame_counter; i < (int)rewind_buffer.size(); i++)
+                                    delete rewind_buffer[i];
+                                rewind_buffer.resize(frame_counter);
+                            }
                             break;
                         }
                         default:;
@@ -78,6 +82,8 @@ int main()
                     game->loadState(&buffer);
                     delete last_state;
                     rewind_buffer.resize(rewind_buffer.size() - 1);
+                    if (saved_state_frame_index >= game->frame_counter)
+                        saved_state.clear();
                 }
             } else {
                 // forwards
