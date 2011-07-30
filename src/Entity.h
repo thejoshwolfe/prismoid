@@ -9,8 +9,9 @@ public:
     sf::Vector2f center;
     sf::Vector2f size;
     sf::Vector2f velocity;
+    sf::Color color;
 
-    Entity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Vector2f & velocity);
+    Entity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Vector2f & velocity, const sf::Color & color);
 
     void render(sf::RenderTarget * render_target);
     sf::FloatRect getBoundingBox();

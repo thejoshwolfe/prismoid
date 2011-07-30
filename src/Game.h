@@ -7,7 +7,6 @@ class Game
 {
 public:
     long long frame_counter;
-    Entity * entity;
     Game();
 
     void doFrame(const sf::Input * input);
@@ -15,6 +14,11 @@ public:
 
     void saveState(std::vector<byte>* buffer);
     void loadState(std::vector<byte>::const_iterator* buffer);
+
+private:
+    Entity * main_entity;
+    Entity * floor_entity;
+
 };
 
 #endif // GAME_H

@@ -17,7 +17,6 @@ int main()
     main_window->UseVerticalSync(true);
 
     Game * game = new Game;
-    game->entity = new Entity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Vector2f(0, 0));
     long long saved_state_frame_index = -1;
     std::vector<byte> saved_state;
     std::vector<std::vector<byte>*> rewind_buffer;
