@@ -1,7 +1,7 @@
 #include "Entity.h"
 
-Entity::Entity(const sf::Vector2f & center, const sf::Vector2f & size) :
-    center(center), size(size), velocity(0, 0)
+Entity::Entity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Vector2f & velocity) :
+    center(center), size(size), velocity(velocity)
 {
 }
 
@@ -23,4 +23,19 @@ sf::FloatRect Entity::getBoundingBox()
                          center.y - size.y / 2,
                          center.x + size.x / 2,
                          center.y + size.y / 2);
+}
+
+void Entity::serialize(std::vector<byte> *buffer)
+{
+    Util::serialize(buffer, center);
+    Util::serialize(buffer, size);
+    Util::serialize(buffer, velocity);
+}
+
+Entity * Entity::deserialize(std::vector<byte>::const_iterator* buffer)
+{
+    sf::Vector2f center = Util::deserializeVector2f(buffer);
+    sf::Vector2f size = Util::deserializeVector2f(buffer);
+    sf::Vector2f velocity = Util::deserializeVector2f(buffer);
+    return new Entity(center, size, velocity);
 }
