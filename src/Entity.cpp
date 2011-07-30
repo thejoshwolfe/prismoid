@@ -34,8 +34,8 @@ void Entity::serialize(std::vector<byte> *buffer)
 
 Entity * Entity::deserialize(std::vector<byte>::const_iterator* buffer)
 {
-    sf::Vector2f center = Util::deserializeVector2f(buffer);
-    sf::Vector2f size = Util::deserializeVector2f(buffer);
-    sf::Vector2f velocity = Util::deserializeVector2f(buffer);
+    sf::Vector2f center = Util::deserialize<sf::Vector2f>(buffer);
+    sf::Vector2f size = Util::deserialize<sf::Vector2f>(buffer);
+    sf::Vector2f velocity = Util::deserialize<sf::Vector2f>(buffer);
     return new Entity(center, size, velocity);
 }

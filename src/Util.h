@@ -7,14 +7,24 @@ typedef unsigned char byte;
 
 
 namespace Util {
-void serialize(std::vector<byte>* buffer, float value);
-float deserializeFloat(std::vector<byte>::const_iterator* buffer);
 
-void serialize(std::vector<byte>* buffer, long long value);
-long long deserializeLongLong(std::vector<byte>::const_iterator* buffer);
+template <typename T>
+void serialize(std::vector<byte>* buffer, T value)
+{
+    byte * byte_pointer = reinterpret_cast<byte*>(&value);
+    for (int i = 0; i < (int)sizeof(value); i++)
+        buffer->push_back(byte_pointer[i]);
+}
 
-void serialize(std::vector<byte>* buffer, sf::Vector2f value);
-sf::Vector2f deserializeVector2f(std::vector<byte>::const_iterator* buffer);
+template <typename T>
+T deserialize(std::vector<byte>::const_iterator* buffer)
+{
+    T value;
+    byte * byte_pointer = reinterpret_cast<byte*>(&value);
+    for (int i = 0; i < (int)sizeof(value); i++, (*buffer)++)
+        byte_pointer[i] = *(*buffer);
+    return value;
+}
 
 }
 

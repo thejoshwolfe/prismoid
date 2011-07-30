@@ -41,7 +41,7 @@ void Game::saveState(std::vector<byte>* buffer)
 }
 void Game::loadState(std::vector<byte>::const_iterator* buffer)
 {
-    frame_counter = Util::deserializeLongLong(buffer);
+    frame_counter = Util::deserialize<long long>(buffer);
     delete entity;
     entity = Entity::deserialize(buffer);
 }
