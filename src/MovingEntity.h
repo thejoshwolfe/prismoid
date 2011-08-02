@@ -39,7 +39,7 @@ private:
 
     static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
 
-    static float distanceFromPointToSegment(const sf::Vector2f &point, float angle, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2);
+    static float distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2);
 };
 
 #endif // MOVINGENTITY_H

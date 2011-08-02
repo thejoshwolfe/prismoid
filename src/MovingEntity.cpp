@@ -11,7 +11,7 @@ void MovingEntity::render(sf::RenderTarget *render_target)
         // draw motion bounding polygon
         sf::Shape shape = sf::Shape();
         for (int i = 0; i < (int)motion_bounding_polygon.size(); i++)
-            shape.AddPoint(motion_bounding_polygon[i], sf::Color::Green);
+            shape.AddPoint(motion_bounding_polygon[i], collisions.empty() ? sf::Color::Green : sf::Color::Magenta);
         render_target->Draw(shape);
     }
 
@@ -93,7 +93,7 @@ void MovingEntity::detectCollision(Entity *other)
                 continue;
             sf::Vector2f other1 = other_motion_bounding_polygon[j];
             sf::Vector2f other2 = other_motion_bounding_polygon[(j + 1) % other_motion_bounding_polygon.size()];
-            float distance_to_collision = distanceFromPointToSegment(this1, velocity_angle, other1, other2);
+            float distance_to_collision = distanceFromPointToSegment(this1, velocity, other1, other2);
             if (distance_to_collision <= velocity_magnitude) {
                 // collision
                 collisions.push_back(Collision(distance_to_collision, other));
@@ -107,7 +107,7 @@ void MovingEntity::detectCollision(Entity *other)
                 if (!(is_other_back_edge[j] || is_other_back_edge[Util::euclideanMod(j - 1, (int)is_other_back_edge.size())]))
                     continue;
                 sf::Vector2f other1 = other_motion_bounding_polygon[j];
-                float distance_from_collision = distanceFromPointToSegment(other1, opposite_velocity_angle, this1, this2);
+                float distance_from_collision = distanceFromPointToSegment(other1, -velocity, this1, this2);
                 if (distance_from_collision <= velocity_magnitude) {
                     // collision
                     collisions.push_back(Collision(velocity_magnitude - distance_from_collision, other));
@@ -118,16 +118,19 @@ void MovingEntity::detectCollision(Entity *other)
     }
 }
 
-float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, float angle, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2)
+float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2)
 {
-    // angle with enpoint 1 is always bigger due to clockwise polygons
-    float angle_max = Util::angleOfVector(endpoint1 - point);
-    float angle_min = Util::angleOfVector(endpoint2 - point);
-    float angle_above_min = angle - angle_min;
-    if (!(Util::euclideanMod(angle_above_min, Util::two_pi) < Util::euclideanMod(angle_max, Util::two_pi)))
+    sf::Vector2f segment_direction = endpoint2 - endpoint1;
+    float denominator = Util::dot(Util::perp(segment_direction), direction);
+    if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
+        return std::numeric_limits<float>::infinity(); // parallel
+    float s = Util::dot(Util::perp(segment_direction), endpoint1 - point) / denominator;
+    if (!(0 <= s && s <= 1))
         return std::numeric_limits<float>::infinity(); // miss
-
-    return std::numeric_limits<float>::infinity();
+    float t = Util::dot(Util::perp(direction), endpoint1 - point) / denominator;
+    if (t < 0)
+        return std::numeric_limits<float>::infinity(); // behind
+    return t * Util::magnitude(direction);
 }
 
 void MovingEntity::applyVelocity()

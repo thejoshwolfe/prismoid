@@ -41,6 +41,17 @@ float magnitude(sf::Vector2<T> vector)
     return std::sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
+template <typename T>
+T dot(sf::Vector2<T> a, sf::Vector2<T> b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+template <typename T>
+sf::Vector2<T> perp(sf::Vector2<T> vector)
+{
+    return sf::Vector2<T>(vector.y, -vector.x);
+}
 
 }
 
