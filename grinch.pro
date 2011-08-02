@@ -11,9 +11,13 @@ LIBS += -lsfml-graphics
 
 SOURCES += src/main.cpp \
     src/Entity.cpp \
-    src/Game.cpp
+    src/Game.cpp \
+    src/MovingEntity.cpp \
+    src/StaticEntity.cpp
 
 HEADERS += \
     src/Entity.h \
     src/Game.h \
-    src/Util.h
+    src/Util.h \
+    src/MovingEntity.h \
+    src/StaticEntity.h

@@ -1,7 +1,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "Entity.h"
+#include "MovingEntity.h"
+#include "StaticEntity.h"
 
 class Game
 {
@@ -16,8 +17,8 @@ public:
     void loadState(std::vector<byte>::const_iterator* buffer);
 
 private:
-    Entity * main_entity;
-    Entity * floor_entity;
+    MovingEntity * main_entity;
+    StaticEntity * floor_entity;
 
 };
 
