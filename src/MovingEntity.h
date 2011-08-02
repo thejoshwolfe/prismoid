@@ -13,6 +13,7 @@ public:
 
     sf::Vector2f * getVelocity() { return &velocity; }
 
+    void resetTemporaryState();
     void calculateMotionBoundingPolygon();
     void detectCollision(Entity * other);
     void applyVelocity();
@@ -21,12 +22,24 @@ public:
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
 
 private:
+    struct Collision {
+        float distance;
+        Entity * entity;
+        Collision(float distance, Entity * entity)
+            : distance(distance), entity(entity) {}
+    };
+
     // important
     sf::Vector2f velocity;
 
     // temporary
     std::vector<bool> is_front_edge;
     std::vector<sf::Vector2f> motion_bounding_polygon;
+    std::vector<Collision> collisions;
+
+    static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
+
+    static float distanceFromPointToSegment(const sf::Vector2f &point, float angle, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2);
 };
 
 #endif // MOVINGENTITY_H

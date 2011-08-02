@@ -13,7 +13,8 @@ SOURCES += src/main.cpp \
     src/Entity.cpp \
     src/Game.cpp \
     src/MovingEntity.cpp \
-    src/StaticEntity.cpp
+    src/StaticEntity.cpp \
+    src/Util.cpp
 
 HEADERS += \
     src/Entity.h \

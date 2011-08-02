@@ -11,6 +11,8 @@ void Game::doFrame(const sf::Input * input)
 {
     frame_counter++;
 
+    main_entity->resetTemporaryState();
+
     // run controllers
     const float move_acceleration = 0.4f;
     if (input->IsKeyDown(sf::Key::W)) main_entity->getVelocity()->y -= move_acceleration;

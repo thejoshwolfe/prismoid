@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <limits>
 
 typedef unsigned char byte;
 
@@ -30,20 +31,16 @@ T deserialize(std::vector<byte>::const_iterator* buffer)
     return value;
 }
 
-template <typename T>
-T euclideanMod(T numerator, T denominator)
-{
-    T result = std::fmod(numerator, denominator);
-    if (result < 0)
-        result += denominator;
-    return result;
-}
+float angleOfVector(sf::Vector2f vector);
+float euclideanMod(float numerator, float denominator);
+int euclideanMod(int numerator, int denominator);
 
 template <typename T>
 float magnitude(sf::Vector2<T> vector)
 {
     return std::sqrt(vector.x * vector.x + vector.y * vector.y);
 }
+
 
 }
 

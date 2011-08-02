@@ -23,25 +23,21 @@ void MovingEntity::getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon)
     *polygon = motion_bounding_polygon;
 }
 
-void MovingEntity::calculateMotionBoundingPolygon()
+void MovingEntity::resetTemporaryState()
 {
     is_front_edge.clear();
-    float velocity_magnitude = Util::magnitude(velocity);
-    float velocity_angle = velocity_magnitude != 0 ? std::atan2(velocity.y, velocity.x) : 0;
+    motion_bounding_polygon.clear();
+    collisions.clear();
+}
+
+void MovingEntity::calculateMotionBoundingPolygon()
+{
+    float velocity_angle = Util::angleOfVector(velocity);
     std::vector<sf::Vector2f> here;
     getBoundingPolygon(&here);
     // determine which edges face which ways
-    for (int i = 0; i < (int)here.size(); i++) {
-        sf::Vector2f point1 = here[i];
-        sf::Vector2f point2 = here[(i + 1) % here.size()];
-        sf::Vector2f edge = point2 - point1;
-        float edge_angle = std::atan2(edge.y, edge.x);
-        float relative_angle = Util::euclideanMod(velocity_angle - edge_angle, Util::two_pi);
-        bool is_front = relative_angle > Util::pi;
-        is_front_edge.push_back(is_front);
-    }
+    calculateEdgesFacingAngle(here, &is_front_edge, velocity_angle);
 
-    motion_bounding_polygon.clear();
     bool previously_front_edge = is_front_edge[is_front_edge.size() - 1];
     for (int i = 0; i < (int)here.size(); i++) {
         sf::Vector2f point = here[i];
@@ -63,8 +59,75 @@ void MovingEntity::calculateMotionBoundingPolygon()
     }
 }
 
+void MovingEntity::calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> *is_facing_edge, float facing_angle)
+{
+    for (int i = 0; i < (int)polygon.size(); i++) {
+        sf::Vector2f point1 = polygon[i];
+        sf::Vector2f point2 = polygon[(i + 1) % polygon.size()];
+        sf::Vector2f edge = point2 - point1;
+        float edge_angle = std::atan2(edge.y, edge.x);
+        float relative_angle = Util::euclideanMod(facing_angle - edge_angle, Util::two_pi);
+        bool is_front = relative_angle > Util::pi;
+        is_facing_edge->push_back(is_front);
+    }
+}
+
 void MovingEntity::detectCollision(Entity *other)
 {
+    std::vector<sf::Vector2f> here;
+    getBoundingPolygon(&here);
+    std::vector<sf::Vector2f> other_motion_bounding_polygon;
+    other->getMotionBoundingPolygon(&other_motion_bounding_polygon);
+    float velocity_magnitude = Util::magnitude(velocity);
+    float velocity_angle = Util::angleOfVector(velocity);
+    float opposite_velocity_angle = velocity_angle + Util::pi;
+    std::vector<bool> is_other_back_edge;
+    calculateEdgesFacingAngle(other_motion_bounding_polygon, &is_other_back_edge, opposite_velocity_angle);
+    for (int i = 0; i < (int)here.size(); i++) {
+        if (!(is_front_edge[i] || is_front_edge[Util::euclideanMod(i - 1, (int)is_front_edge.size())]))
+            continue;
+        // check this point against those edges
+        sf::Vector2f this1 = here[i];
+        for (int j = 0; j < (int)other_motion_bounding_polygon.size(); j++) {
+            if (!is_other_back_edge[j])
+                continue;
+            sf::Vector2f other1 = other_motion_bounding_polygon[j];
+            sf::Vector2f other2 = other_motion_bounding_polygon[(j + 1) % other_motion_bounding_polygon.size()];
+            float distance_to_collision = distanceFromPointToSegment(this1, velocity_angle, other1, other2);
+            if (distance_to_collision <= velocity_magnitude) {
+                // collision
+                collisions.push_back(Collision(distance_to_collision, other));
+                return;
+            }
+        }
+        if (is_front_edge[i]) {
+            // check this edge against those points
+            sf::Vector2f this2 = here[(i + 1) % here.size()];
+            for (int j = 0; j < (int)other_motion_bounding_polygon.size(); j++) {
+                if (!(is_other_back_edge[j] || is_other_back_edge[Util::euclideanMod(j - 1, (int)is_other_back_edge.size())]))
+                    continue;
+                sf::Vector2f other1 = other_motion_bounding_polygon[j];
+                float distance_from_collision = distanceFromPointToSegment(other1, opposite_velocity_angle, this1, this2);
+                if (distance_from_collision <= velocity_magnitude) {
+                    // collision
+                    collisions.push_back(Collision(velocity_magnitude - distance_from_collision, other));
+                    return;
+                }
+            }
+        }
+    }
+}
+
+float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, float angle, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2)
+{
+    // angle with enpoint 1 is always bigger due to clockwise polygons
+    float angle_max = Util::angleOfVector(endpoint1 - point);
+    float angle_min = Util::angleOfVector(endpoint2 - point);
+    float angle_above_min = angle - angle_min;
+    if (!(Util::euclideanMod(angle_above_min, Util::two_pi) < Util::euclideanMod(angle_max, Util::two_pi)))
+        return std::numeric_limits<float>::infinity(); // miss
+
+    return std::numeric_limits<float>::infinity();
 }
 
 void MovingEntity::applyVelocity()
