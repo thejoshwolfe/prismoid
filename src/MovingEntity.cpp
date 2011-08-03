@@ -1,7 +1,7 @@
 #include "MovingEntity.h"
 
-MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, const sf::Vector2f &velocity) :
-    Entity(center, size, color), velocity(velocity)
+MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, float elasticity, const sf::Vector2f &velocity) :
+    Entity(center, size, color, elasticity), velocity(velocity)
 {
 }
 
@@ -142,6 +142,7 @@ void MovingEntity::resolveCollisionsAndApplyVelocity()
     sf::Vector2f normalized_velocity = Util::normalized(velocity);
     std::multimap<float, Collision>::iterator iterator = collisions.begin();
     float closest_collision = iterator->first;
+    Entity * other = iterator->second.entity;
     // the biggest dot product means the steepest collision angle
     sf::Vector2f normal_with_biggest_dot_product = iterator->second.normal;
     float biggest_dot_product = Util::dot(normalized_velocity, normal_with_biggest_dot_product);
@@ -157,6 +158,7 @@ void MovingEntity::resolveCollisionsAndApplyVelocity()
             // found a steeper collision
             biggest_dot_product = dot_product;
             normal_with_biggest_dot_product = normal;
+            other = iterator->second.entity;
         }
     }
 
@@ -164,7 +166,8 @@ void MovingEntity::resolveCollisionsAndApplyVelocity()
     center += closest_collision * normalized_velocity;
 
     // bounce
-    velocity = velocity - 2 * Util::dot(velocity, normal_with_biggest_dot_product) * normal_with_biggest_dot_product;
+    float elasticity = this->elasticity * other->getElasticity();
+    velocity = velocity - (1 + elasticity) * Util::dot(velocity, normal_with_biggest_dot_product) * normal_with_biggest_dot_product;
 }
 
 void MovingEntity::serialize(std::vector<byte> *buffer)
@@ -172,6 +175,7 @@ void MovingEntity::serialize(std::vector<byte> *buffer)
     Util::serialize(buffer, center);
     Util::serialize(buffer, size);
     Util::serialize(buffer, color);
+    Util::serialize(buffer, elasticity);
     Util::serialize(buffer, velocity);
 }
 
@@ -180,6 +184,7 @@ MovingEntity * MovingEntity::deserialize(std::vector<byte>::const_iterator* buff
     sf::Vector2f center = Util::deserialize<sf::Vector2f>(buffer);
     sf::Vector2f size = Util::deserialize<sf::Vector2f>(buffer);
     sf::Color color = Util::deserialize<sf::Color>(buffer);
+    float elasticity = Util::deserialize<float>(buffer);
     sf::Vector2f velocity = Util::deserialize<sf::Vector2f>(buffer);
-    return new MovingEntity(center, size, color, velocity);
+    return new MovingEntity(center, size, color, elasticity, velocity);
 }

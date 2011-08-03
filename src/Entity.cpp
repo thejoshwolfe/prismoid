@@ -1,10 +1,5 @@
 #include "Entity.h"
 
-Entity::Entity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color) :
-    center(center), size(size), color(color)
-{
-}
-
 void Entity::render(sf::RenderTarget *render_target)
 {
     sf::Shape shape = sf::Shape();

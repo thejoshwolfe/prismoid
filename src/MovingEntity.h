@@ -6,7 +6,7 @@
 class MovingEntity : public Entity
 {
 public:
-    MovingEntity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, const sf::Vector2f & velocity);
+    MovingEntity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, const sf::Vector2f & velocity);
 
     virtual void render(sf::RenderTarget *render_target);
     virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon);
