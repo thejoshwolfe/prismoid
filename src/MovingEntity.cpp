@@ -139,14 +139,32 @@ void MovingEntity::resolveCollisionsAndApplyVelocity()
         center += velocity;
         return;
     }
+    sf::Vector2f normalized_velocity = Util::normalized(velocity);
     std::multimap<float, Collision>::iterator iterator = collisions.begin();
     float closest_collision = iterator->first;
-    center += closest_collision * Util::normalized(velocity);
-    velocity = sf::Vector2f(0, 0);
+    // the biggest dot product means the steepest collision angle
+    sf::Vector2f normal_with_biggest_dot_product = iterator->second.normal;
+    float biggest_dot_product = Util::dot(normalized_velocity, normal_with_biggest_dot_product);
+    iterator++;
     for (; iterator != collisions.end(); iterator++) {
+        // accept any collision at pretty much the same place as the first one
+        float distance_to_collision = iterator->first;
+        if (distance_to_collision - closest_collision > std::numeric_limits<float>::epsilon())
+            break; // too far away
         sf::Vector2f normal = iterator->second.normal;
-        Entity * blah = iterator->second.entity;
+        float dot_product = Util::dot(normalized_velocity, normal);
+        if (dot_product > biggest_dot_product) {
+            // found a steeper collision
+            biggest_dot_product = dot_product;
+            normal_with_biggest_dot_product = normal;
+        }
     }
+
+    // snap to the collision point
+    center += closest_collision * normalized_velocity;
+
+    // bounce
+    velocity = velocity - 2 * Util::dot(velocity, normal_with_biggest_dot_product) * normal_with_biggest_dot_product;
 }
 
 void MovingEntity::serialize(std::vector<byte> *buffer)
