@@ -16,17 +16,16 @@ public:
     void resetTemporaryState();
     void calculateMotionBoundingPolygon();
     void detectCollision(Entity * other);
-    void applyVelocity();
+    void resolveCollisionsAndApplyVelocity();
 
     void serialize(std::vector<byte>* buffer);
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
 
 private:
     struct Collision {
-        float distance;
         Entity * entity;
-        Collision(float distance, Entity * entity)
-            : distance(distance), entity(entity) {}
+        Collision(Entity * entity)
+            : entity(entity) {}
     };
 
     // important
@@ -35,7 +34,7 @@ private:
     // temporary
     std::vector<bool> is_front_edge;
     std::vector<sf::Vector2f> motion_bounding_polygon;
-    std::vector<Collision> collisions;
+    std::multimap<float, Collision> collisions;
 
     static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
 

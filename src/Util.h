@@ -31,14 +31,35 @@ T deserialize(std::vector<byte>::const_iterator* buffer)
     return value;
 }
 
-float angleOfVector(sf::Vector2f vector);
-float euclideanMod(float numerator, float denominator);
-int euclideanMod(int numerator, int denominator);
+inline float angleOfVector(sf::Vector2f vector)
+{
+    if (vector.y == 0 && vector.x == 0)
+        return 0; // whatever
+    return std::atan2(vector.y, vector.x);
+}
 
-template <typename T>
-float magnitude(sf::Vector2<T> vector)
+inline float euclideanMod(float numerator, float denominator)
+{
+    float result = std::fmod(numerator, denominator);
+    if (result < 0)
+        result += denominator;
+    return result;
+}
+
+inline int euclideanMod(int numerator, int denominator)
+{
+    return (numerator % denominator + denominator) % denominator;
+}
+
+inline float magnitude(sf::Vector2f vector)
 {
     return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
+inline sf::Vector2f normalized(sf::Vector2f vector)
+{
+    float _magnitude = magnitude(vector);
+    return _magnitude == 0 ? sf::Vector2f(0, 0) : vector / _magnitude;
 }
 
 template <typename T>
@@ -51,6 +72,12 @@ template <typename T>
 sf::Vector2<T> perp(sf::Vector2<T> vector)
 {
     return sf::Vector2<T>(vector.y, -vector.x);
+}
+
+template <typename K, typename V>
+void insert(std::multimap<K, V>* map, K key, V value)
+{
+    map->insert(std::pair<K, V>(key, value));
 }
 
 }

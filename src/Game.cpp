@@ -14,7 +14,7 @@ void Game::doFrame(const sf::Input * input)
     main_entity->resetTemporaryState();
 
     // run controllers
-    const float move_acceleration = 0.4f;
+    const float move_acceleration = 10 * 0.4f;
     if (input->IsKeyDown(sf::Key::W)) main_entity->getVelocity()->y -= move_acceleration;
     if (input->IsKeyDown(sf::Key::A)) main_entity->getVelocity()->x -= move_acceleration;
     if (input->IsKeyDown(sf::Key::S)) main_entity->getVelocity()->y += move_acceleration;
@@ -27,9 +27,7 @@ void Game::doFrame(const sf::Input * input)
     main_entity->detectCollision(floor_entity);
 
     // resolve collisions
-
-    // apply velocity to positions
-    main_entity->applyVelocity();
+    main_entity->resolveCollisionsAndApplyVelocity();
 }
 
 void Game::render(sf::RenderTarget *render_target)

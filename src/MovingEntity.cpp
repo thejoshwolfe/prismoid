@@ -96,8 +96,7 @@ void MovingEntity::detectCollision(Entity *other)
             float distance_to_collision = distanceFromPointToSegment(this1, velocity, other1, other2);
             if (distance_to_collision <= velocity_magnitude) {
                 // collision
-                collisions.push_back(Collision(distance_to_collision, other));
-                return;
+                Util::insert(&collisions, distance_to_collision, Collision(other));
             }
         }
         if (is_front_edge[i]) {
@@ -107,11 +106,10 @@ void MovingEntity::detectCollision(Entity *other)
                 if (!(is_other_back_edge[j] || is_other_back_edge[Util::euclideanMod(j - 1, (int)is_other_back_edge.size())]))
                     continue;
                 sf::Vector2f other1 = other_motion_bounding_polygon[j];
-                float distance_from_collision = distanceFromPointToSegment(other1, -velocity, this1, this2);
-                if (distance_from_collision <= velocity_magnitude) {
+                float distance_to_collision = distanceFromPointToSegment(other1, -velocity, this1, this2);
+                if (distance_to_collision <= velocity_magnitude) {
                     // collision
-                    collisions.push_back(Collision(velocity_magnitude - distance_from_collision, other));
-                    return;
+                    Util::insert(&collisions, distance_to_collision, Collision(other));
                 }
             }
         }
@@ -125,18 +123,25 @@ float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, const 
     float denominator = Util::dot(Util::perp(segment_direction), direction);
     if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
         return std::numeric_limits<float>::infinity(); // parallel
-    float s = Util::dot(Util::perp(segment_direction), endpoint1 - point) / denominator;
-    if (!(0 <= s && s <= 1))
-        return std::numeric_limits<float>::infinity(); // miss
     float t = Util::dot(Util::perp(direction), endpoint1 - point) / denominator;
-    if (t < 0)
+    if (!(0 <= t && t <= 1))
+        return std::numeric_limits<float>::infinity(); // miss
+    float s = Util::dot(Util::perp(segment_direction), endpoint1 - point) / denominator;
+    if (s < 0)
         return std::numeric_limits<float>::infinity(); // behind
-    return t * Util::magnitude(direction);
+    return s * Util::magnitude(direction);
 }
 
-void MovingEntity::applyVelocity()
+void MovingEntity::resolveCollisionsAndApplyVelocity()
 {
-    center += velocity;
+    if (collisions.empty()) {
+        center += velocity;
+        return;
+    }
+    std::multimap<float, Collision>::iterator iterator = collisions.begin();
+    float closest_collision = iterator->first;
+    center += closest_collision * Util::normalized(velocity);
+    velocity = sf::Vector2f(0, 0);
 }
 
 void MovingEntity::serialize(std::vector<byte> *buffer)
