@@ -120,6 +120,7 @@ void MovingEntity::detectCollision(Entity *other)
 
 float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2)
 {
+    // http://objectmix.com/graphics/132701-ray-line-segment-intersection-2d.html#post460607
     sf::Vector2f segment_direction = endpoint2 - endpoint1;
     float denominator = Util::dot(Util::perp(segment_direction), direction);
     if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
