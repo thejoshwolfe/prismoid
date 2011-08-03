@@ -93,10 +93,11 @@ void MovingEntity::detectCollision(Entity *other)
                 continue;
             sf::Vector2f other1 = other_motion_bounding_polygon[j];
             sf::Vector2f other2 = other_motion_bounding_polygon[(j + 1) % other_motion_bounding_polygon.size()];
-            float distance_to_collision = distanceFromPointToSegment(this1, velocity, other1, other2);
+            sf::Vector2f segment_direction = other2 - other1;
+            float distance_to_collision = distanceFromPointToSegment(this1, velocity, other1, segment_direction);
             if (distance_to_collision <= velocity_magnitude) {
                 // collision
-                Util::insert(&collisions, distance_to_collision, Collision(other));
+                Util::insert(&collisions, distance_to_collision, Collision(other, Util::perp(Util::normalized(segment_direction))));
             }
         }
         if (is_front_edge[i]) {
@@ -106,27 +107,27 @@ void MovingEntity::detectCollision(Entity *other)
                 if (!(is_other_back_edge[j] || is_other_back_edge[Util::euclideanMod(j - 1, (int)is_other_back_edge.size())]))
                     continue;
                 sf::Vector2f other1 = other_motion_bounding_polygon[j];
-                float distance_to_collision = distanceFromPointToSegment(other1, -velocity, this1, this2);
+                sf::Vector2f segment_direction = this2 - this1;
+                float distance_to_collision = distanceFromPointToSegment(other1, -velocity, this1, segment_direction);
                 if (distance_to_collision <= velocity_magnitude) {
                     // collision
-                    Util::insert(&collisions, distance_to_collision, Collision(other));
+                    Util::insert(&collisions, distance_to_collision, Collision(other, -Util::perp(Util::normalized(segment_direction))));
                 }
             }
         }
     }
 }
 
-float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2)
+float MovingEntity::distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &segment_start, const sf::Vector2f &segment_direction)
 {
     // http://objectmix.com/graphics/132701-ray-line-segment-intersection-2d.html#post460607
-    sf::Vector2f segment_direction = endpoint2 - endpoint1;
     float denominator = Util::dot(Util::perp(segment_direction), direction);
     if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
         return std::numeric_limits<float>::infinity(); // parallel
-    float t = Util::dot(Util::perp(direction), endpoint1 - point) / denominator;
+    float t = Util::dot(Util::perp(direction), segment_start - point) / denominator;
     if (!(0 <= t && t <= 1))
         return std::numeric_limits<float>::infinity(); // miss
-    float s = Util::dot(Util::perp(segment_direction), endpoint1 - point) / denominator;
+    float s = Util::dot(Util::perp(segment_direction), segment_start - point) / denominator;
     if (s < 0)
         return std::numeric_limits<float>::infinity(); // behind
     return s * Util::magnitude(direction);
@@ -142,6 +143,10 @@ void MovingEntity::resolveCollisionsAndApplyVelocity()
     float closest_collision = iterator->first;
     center += closest_collision * Util::normalized(velocity);
     velocity = sf::Vector2f(0, 0);
+    for (; iterator != collisions.end(); iterator++) {
+        sf::Vector2f normal = iterator->second.normal;
+        Entity * blah = iterator->second.entity;
+    }
 }
 
 void MovingEntity::serialize(std::vector<byte> *buffer)

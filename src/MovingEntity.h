@@ -24,8 +24,9 @@ public:
 private:
     struct Collision {
         Entity * entity;
-        Collision(Entity * entity)
-            : entity(entity) {}
+        sf::Vector2f normal;
+        Collision(Entity * entity, const sf::Vector2f &normal)
+            : entity(entity), normal(normal) {}
     };
 
     // important
@@ -38,7 +39,7 @@ private:
 
     static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
 
-    static float distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &endpoint1, const sf::Vector2f &endpoint2);
+    static float distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &segment_start, const sf::Vector2f &segment_direction);
 };
 
 #endif // MOVINGENTITY_H
