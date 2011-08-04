@@ -1,5 +1,7 @@
 #include "MovingEntity.h"
 
+#include "Game.h"
+
 MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, float elasticity, const sf::Vector2f &velocity) :
     Entity(center, size, color, elasticity), velocity(velocity)
 {
@@ -25,7 +27,19 @@ void MovingEntity::getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon)
 
 void MovingEntity::resetForNextFrame()
 {
+    // TODO: we can do this whenever we return true from the other thing
     remaining_velocity_percent = 1;
+}
+
+void MovingEntity::doController(Game *game)
+{
+    const sf::Input * input = game->getInput();
+    const float move_acceleration = 0.5f;
+    if (input->IsKeyDown(sf::Key::W)) velocity.y -= move_acceleration;
+    if (input->IsKeyDown(sf::Key::A)) velocity.x -= move_acceleration;
+    if (input->IsKeyDown(sf::Key::S)) velocity.y += move_acceleration;
+    if (input->IsKeyDown(sf::Key::D)) velocity.x += move_acceleration;
+    velocity.y += 0.4f;
 }
 
 void MovingEntity::calculateMotionBoundingPolygon()

@@ -3,6 +3,8 @@
 
 #include "Entity.h"
 
+class Game;
+
 class MovingEntity : public Entity
 {
 public:
@@ -11,7 +13,7 @@ public:
     virtual void render(sf::RenderTarget *render_target);
     virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon);
 
-    sf::Vector2f * getVelocity() { return &velocity; }
+    virtual void doController(Game * game);
 
     void resetForNextFrame();
     void calculateMotionBoundingPolygon();

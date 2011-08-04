@@ -14,12 +14,8 @@ void Game::doFrame(const sf::Input * input)
     main_entity->resetForNextFrame();
 
     // run controllers
-    const float move_acceleration = 0.5f;
-    if (input->IsKeyDown(sf::Key::W)) main_entity->getVelocity()->y -= move_acceleration;
-    if (input->IsKeyDown(sf::Key::A)) main_entity->getVelocity()->x -= move_acceleration;
-    if (input->IsKeyDown(sf::Key::S)) main_entity->getVelocity()->y += move_acceleration;
-    if (input->IsKeyDown(sf::Key::D)) main_entity->getVelocity()->x += move_acceleration;
-    main_entity->getVelocity()->y += 0.4f;
+    this->input = input;
+    main_entity->doController(this);
 
     bool keep_going = true;
     while (keep_going) {
