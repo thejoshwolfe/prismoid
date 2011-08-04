@@ -13,10 +13,11 @@ public:
 
     sf::Vector2f * getVelocity() { return &velocity; }
 
-    void resetTemporaryState();
+    void resetForNextFrame();
     void calculateMotionBoundingPolygon();
     void detectCollision(Entity * other);
-    void resolveCollisionsAndApplyVelocity();
+    /** returns whether it's got more distance to go in this frame */
+    bool resolveCollisionsAndApplyVelocity();
 
     void serialize(std::vector<byte>* buffer);
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
@@ -36,6 +37,7 @@ private:
     std::vector<bool> is_front_edge;
     std::vector<sf::Vector2f> motion_bounding_polygon;
     std::multimap<float, Collision> collisions;
+    float remaining_velocity_percent;
 
     static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
 
