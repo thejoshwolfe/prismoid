@@ -3,8 +3,8 @@
 Game::Game() :
     frame_counter(0)
 {
-    main_entity = new MovingEntity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, sf::Vector2f(0, 0));
-    floor_entity = new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 0.5);
+    main_entity = new MovingEntity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0));
+    floor_entity = new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 0.5, 0.25);
 }
 
 void Game::doFrame(const sf::Input * input)

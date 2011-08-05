@@ -80,6 +80,18 @@ void insert(std::multimap<K, V>* map, K key, V value)
     map->insert(std::pair<K, V>(key, value));
 }
 
+template <typename T>
+T min(T a, T b)
+{
+    return a < b ? a : b;
+}
+template <typename T>
+T max(T a, T b)
+{
+    return a > b ? a : b;
+}
+
+
 }
 
 #endif

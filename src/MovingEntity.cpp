@@ -2,8 +2,8 @@
 
 #include "Game.h"
 
-MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, float elasticity, const sf::Vector2f &velocity) :
-    Entity(center, size, color, elasticity), velocity(velocity)
+MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, float elasticity, float friction, const sf::Vector2f &velocity) :
+    Entity(center, size, color, elasticity, friction), velocity(velocity)
 {
 }
 
@@ -193,7 +193,13 @@ bool MovingEntity::resolveCollisionsAndApplyVelocity()
 
     // bounce
     float elasticity = this->elasticity * other->getElasticity();
-    velocity = velocity - (1 + elasticity) * Util::dot(velocity, normal_with_biggest_dot_product) * normal_with_biggest_dot_product;
+    sf::Vector2f normal_component = Util::dot(velocity, normal_with_biggest_dot_product) * normal_with_biggest_dot_product;
+    sf::Vector2f tangent_component = velocity - normal_component;
+    sf::Vector2f normal_force = -(1 + elasticity) * normal_component;
+    float friction_coefficient = this->friction * other->getFriction();
+    float friction_magnitude = Util::min(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
+    sf::Vector2f friction_force = -friction_magnitude * Util::normalized(tangent_component);
+    velocity += normal_force + friction_force;
 
     return remaining_velocity_percent > 0;
 }
@@ -204,6 +210,7 @@ void MovingEntity::serialize(std::vector<byte> *buffer)
     Util::serialize(buffer, size);
     Util::serialize(buffer, color);
     Util::serialize(buffer, elasticity);
+    Util::serialize(buffer, friction);
     Util::serialize(buffer, velocity);
 }
 
@@ -213,6 +220,7 @@ MovingEntity * MovingEntity::deserialize(std::vector<byte>::const_iterator* buff
     sf::Vector2f size = Util::deserialize<sf::Vector2f>(buffer);
     sf::Color color = Util::deserialize<sf::Color>(buffer);
     float elasticity = Util::deserialize<float>(buffer);
+    float friction = Util::deserialize<float>(buffer);
     sf::Vector2f velocity = Util::deserialize<sf::Vector2f>(buffer);
-    return new MovingEntity(center, size, color, elasticity, velocity);
+    return new MovingEntity(center, size, color, elasticity, friction, velocity);
 }
