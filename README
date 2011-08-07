@@ -1,7 +1,24 @@
 
-This project does very little so far.
+This project is pretty much just a physics engine. Someday it will hopefully be
+game engine, and then hopefully a game.
 
-Build it with qmake.
+The physics engine is 2d and geared toward side-scrolling platformers. Entities
+are made of n-sided polygons and do not rotate. I suppose this is kind of like
+the physics in The Incredible Machine.
+
+One of the major goals of this physics engine is to never let objects pass
+through walls or other objects. Firing two bullets directly toward each other
+might cause the bullets to pass through each other due to the discrete
+resolution of naive collision detection. This physics engine solves this problem
+by causing each moving object to effectively occupy the entire region of space
+it would pass through for the discrete time frame of collision detection; at
+least that's the plan.
+
+Not too much is demoable yet. Sorry.
+
+
+
+Build it with qmake and make.
 
 Installing sfml:
     http://www.sfml-dev.org/tutorials/1.6/
