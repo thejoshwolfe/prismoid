@@ -1,10 +1,16 @@
 #include "Game.h"
 
+#include "PlayerEntity.h"
+
 Game::Game() :
     frame_counter(0)
 {
-    moving_entities.push_back(new MovingEntity(sf::Vector2f(0, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new PlayerEntity(sf::Vector2f(30, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new MovingEntity(sf::Vector2f(30, -100), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0)));
+
+    static_entities.push_back(new StaticEntity(sf::Vector2f(0, 0), sf::Vector2f(20, 600), sf::Color::Red, 0.5, 0.25));
     static_entities.push_back(new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 0.5, 0.25));
+    static_entities.push_back(new StaticEntity(sf::Vector2f(500, 0), sf::Vector2f(20, 600), sf::Color::Red, 0.5, 0.25));
 }
 
 void Game::doFrame(const sf::Input * input)
@@ -19,27 +25,35 @@ void Game::doFrame(const sf::Input * input)
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->doController(this);
 
-    bool keep_going = true;
-    while (keep_going) {
-        keep_going = false;
-
+    std::vector<MovingEntity *> still_moving_entities = moving_entities;
+    for (int asdf = 0; asdf < 10; asdf++) {
         // determine desired motion
-        for (int i = 0; i < (int)moving_entities.size(); i++)
-            moving_entities[i]->calculateMotionBoundingPolygon();
+        for (int i = 0; i < (int)still_moving_entities.size(); i++)
+            still_moving_entities[i]->calculateMotionBoundingPolygon();
 
         // detect collisions
-        for (int i = 0; i < (int)moving_entities.size(); i++) {
-            MovingEntity * entity = moving_entities[i];
+        for (int i = 0; i < (int)still_moving_entities.size(); i++) {
+            MovingEntity * entity = still_moving_entities[i];
             for (int j = 0; j < (int)static_entities.size(); j++)
                 entity->detectCollision(static_entities[j]);
-            for (int j = 0; j < (int)moving_entities.size(); j++)
-                if (i != j)
-                    entity->detectCollision(moving_entities[j]);
+            for (int j = 0; j < (int)moving_entities.size(); j++) {
+                MovingEntity * other_entity = moving_entities[j];
+                if (entity != other_entity)
+                    entity->detectCollision(other_entity);
+            }
         }
 
         // resolve collisions
-        for (int i = 0; i < (int)moving_entities.size(); i++)
-            keep_going |= moving_entities[i]->resolveCollisionsAndApplyVelocity();
+        std::vector<MovingEntity *> next_moving_entities;
+        for (int i = 0; i < (int)still_moving_entities.size(); i++) {
+            MovingEntity * entity = still_moving_entities[i];
+            bool needs_more = entity->resolveCollisionsAndApplyVelocity();
+            if (needs_more)
+                next_moving_entities.push_back(entity);
+        }
+        if (next_moving_entities.empty())
+            break;
+        still_moving_entities = next_moving_entities;
     }
 }
 

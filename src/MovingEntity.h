@@ -24,6 +24,10 @@ public:
     void serialize(std::vector<byte>* buffer);
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
 
+protected:
+    // important
+    sf::Vector2f velocity;
+
 private:
     struct Collision {
         Entity * entity;
@@ -31,9 +35,6 @@ private:
         Collision(Entity * entity, const sf::Vector2f &normal)
             : entity(entity), normal(normal) {}
     };
-
-    // important
-    sf::Vector2f velocity;
 
     // temporary
     std::vector<bool> is_front_edge;
