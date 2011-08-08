@@ -6,7 +6,7 @@
 #include <limits>
 
 typedef unsigned char byte;
-
+typedef int64_t int64;
 
 namespace Util {
 

@@ -17,7 +17,7 @@ int main()
     main_window->UseVerticalSync(true);
 
     Game * game = new Game;
-    long long saved_state_frame_index = -1;
+    int64 saved_state_frame_index = -1;
     std::vector<byte> saved_state;
     std::vector<std::vector<byte>*> rewind_buffer;
 

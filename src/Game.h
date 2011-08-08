@@ -7,7 +7,7 @@
 class Game
 {
 public:
-    long long frame_counter;
+    int64 frame_counter;
     Game();
 
     void doFrame(const sf::Input * input);
@@ -19,8 +19,8 @@ public:
     const sf::Input * getInput() { return input; }
 
 private:
-    MovingEntity * main_entity;
-    StaticEntity * floor_entity;
+    std::vector<MovingEntity *> moving_entities;
+    std::vector<StaticEntity *> static_entities;
     const sf::Input * input;
 };
 
