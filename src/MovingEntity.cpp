@@ -1,11 +1,7 @@
 #include "MovingEntity.h"
 
 #include "Game.h"
-
-MovingEntity::MovingEntity(const sf::Vector2f &center, const sf::Vector2f &size, const sf::Color &color, float elasticity, float friction, const sf::Vector2f &velocity) :
-    Entity(center, size, color, elasticity, friction), velocity(velocity)
-{
-}
+#include "PlayerEntity.h"
 
 void MovingEntity::render(sf::RenderTarget *render_target)
 {
@@ -200,6 +196,7 @@ bool MovingEntity::resolveCollisionsAndApplyVelocity()
 
 void MovingEntity::serialize(std::vector<byte> *buffer)
 {
+    Util::serialize(buffer, (int32)getType());
     Util::serialize(buffer, center);
     Util::serialize(buffer, size);
     Util::serialize(buffer, color);
@@ -210,11 +207,19 @@ void MovingEntity::serialize(std::vector<byte> *buffer)
 
 MovingEntity * MovingEntity::deserialize(std::vector<byte>::const_iterator* buffer)
 {
+    EntityType type = (EntityType)Util::deserialize<int32>(buffer);
     sf::Vector2f center = Util::deserialize<sf::Vector2f>(buffer);
     sf::Vector2f size = Util::deserialize<sf::Vector2f>(buffer);
     sf::Color color = Util::deserialize<sf::Color>(buffer);
     float elasticity = Util::deserialize<float>(buffer);
     float friction = Util::deserialize<float>(buffer);
     sf::Vector2f velocity = Util::deserialize<sf::Vector2f>(buffer);
-    return new MovingEntity(center, size, color, elasticity, friction, velocity);
+    switch (type) {
+        case EntityType_MovingEntity:
+            return new MovingEntity(center, size, color, elasticity, friction, velocity);
+        case EntityType_PlayerEntity:
+            return new PlayerEntity(center, size, color, elasticity, friction, velocity);
+    }
+    // TODO: panic properly
+    throw 1;
 }

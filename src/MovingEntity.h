@@ -8,7 +8,14 @@ class Game;
 class MovingEntity : public Entity
 {
 public:
-    MovingEntity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, float friction, const sf::Vector2f & velocity);
+    enum EntityType {
+        EntityType_MovingEntity,
+        EntityType_PlayerEntity,
+    };
+    MovingEntity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, float friction, const sf::Vector2f & velocity) :
+        Entity(center, size, color, elasticity, friction), velocity(velocity) {}
+
+    virtual EntityType getType() { return EntityType_MovingEntity; }
 
     virtual void render(sf::RenderTarget *render_target);
     virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon);
