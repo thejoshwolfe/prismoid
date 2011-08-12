@@ -18,15 +18,13 @@ public:
     virtual EntityType getType() { return EntityType_MovingEntity; }
 
     virtual void render(sf::RenderTarget *render_target);
-    virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> *polygon);
+    virtual void getBoundingPrismoid(Prismoid *prismoid);
 
     virtual void doController(Game * game);
 
     void resetForNextFrame();
-    void calculateMotionBoundingPolygon();
+    void calculateBoundingPrismoid();
     void detectCollision(Entity * other);
-    /** returns whether it's got more distance to go in this frame */
-    bool resolveCollisionsAndApplyVelocity();
 
     void serialize(std::vector<byte>* buffer);
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
@@ -44,14 +42,9 @@ private:
     };
 
     // temporary
-    std::vector<bool> is_front_edge;
-    std::vector<sf::Vector2f> motion_bounding_polygon;
+    Prismoid bounding_prismoid;
     std::multimap<float, Collision> collisions;
-    float remaining_velocity_percent;
-
-    static void calculateEdgesFacingAngle(const std::vector<sf::Vector2f> &polygon, std::vector<bool> * is_facing_edge, float facing_angle);
-
-    static float distanceFromPointToSegment(const sf::Vector2f &point, const sf::Vector2f &direction, const sf::Vector2f &segment_start, const sf::Vector2f &segment_direction);
+    float frame_progress;
 };
 
 #endif // MOVINGENTITY_H

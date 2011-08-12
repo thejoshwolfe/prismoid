@@ -10,7 +10,7 @@ public:
         Entity(center, size, color, elasticity, friction) {}
 
 public:
-    virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> * polygon);
+    virtual void getBoundingPrismoid(Prismoid *prismoid);
 };
 
 #endif // STATICENTITY_H

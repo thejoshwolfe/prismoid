@@ -14,7 +14,7 @@ public:
 
     virtual void render(sf::RenderTarget * render_target);
 
-    virtual void getMotionBoundingPolygon(std::vector<sf::Vector2f> * polygon) = 0;
+    virtual void getBoundingPrismoid(Prismoid * prismoid) = 0;
 
 protected:
     sf::Vector2f center;

@@ -14,7 +14,8 @@ SOURCES += src/main.cpp \
     src/Game.cpp \
     src/MovingEntity.cpp \
     src/StaticEntity.cpp \
-    src/PlayerEntity.cpp
+    src/PlayerEntity.cpp \
+    src/Prismoid.cpp
 
 HEADERS += \
     src/Entity.h \
@@ -22,4 +23,5 @@ HEADERS += \
     src/Util.h \
     src/MovingEntity.h \
     src/StaticEntity.h \
-    src/PlayerEntity.h
+    src/PlayerEntity.h \
+    src/Prismoid.h
