@@ -97,21 +97,22 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     sf::Vector3f plane_point = plane_edge1.points[0];
     sf::Vector3f plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
     float numerator = dot(plane_point - edge_point, plane_vector);
+    sf::Vector3f intersection_point;
     if (isZero(numerator)) {
         // intersects immediately
-        *output_intersection_point = edge_point;
-        return true;
+        intersection_point = edge_point;
+    } else {
+        float denominator = dot(edge_vector, plane_vector);
+        if (isZero(denominator)) {
+            // parallel and not intersecting
+            return false;
+        }
+        float percent_to_intersection = numerator / denominator;
+        // check the bounds of the edge
+        if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
+            return false;
+        intersection_point = edge_point + percent_to_intersection * edge_vector;
     }
-    float denominator = dot(edge_vector, plane_vector);
-    if (isZero(denominator)) {
-        // parallel and not intersecting
-        return false;
-    }
-    float percent_to_intersection = numerator / denominator;
-    // check the bounds of the edge
-    if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
-        return false;
-    sf::Vector3f intersection_point = edge_point + percent_to_intersection * edge_vector;
 
     // check the bounds of the face
     sf::Vector3f plane_points[] = {
