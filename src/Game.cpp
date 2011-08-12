@@ -25,28 +25,40 @@ void Game::doFrame(const sf::Input * input)
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->doController(this);
 
-    for (int asdf = 0; asdf < 10; asdf++) {
-        // determine desired motion
-        for (int i = 0; i < (int)moving_entities.size(); i++)
-            moving_entities[i]->calculateBoundingPrismoid();
+    // first pass
+    // determine desired motion
+    for (int i = 0; i < (int)moving_entities.size(); i++)
+        moving_entities[i]->calculateBoundingPrismoid();
+    // detect collisions
+    std::priority_queue<Util::KeyAndValue<float, MovingEntity*> > colliding_entities;
+    for (int i = 0; i < (int)moving_entities.size(); i++)
+        detectCollisions(moving_entities[i], &colliding_entities);
 
-        // detect collisions
-        for (int i = 0; i < (int)moving_entities.size(); i++) {
-            MovingEntity * entity = moving_entities[i];
-            for (int j = 0; j < (int)static_entities.size(); j++)
-                entity->detectCollision(static_entities[j]);
-            for (int j = 0; j < (int)moving_entities.size(); j++) {
-                MovingEntity * other_entity = moving_entities[j];
-                if (entity != other_entity)
-                    entity->detectCollision(other_entity);
-            }
-        }
-
-        // resolve collisions
-        for (int i = 0; i < (int)moving_entities.size(); i++) {
-            MovingEntity * entity = moving_entities[i];
+    // move everything in the right order
+    while (!colliding_entities.empty()) {
+        MovingEntity * entity = colliding_entities.top().value;
+        colliding_entities.pop();
+        bool just_collided = entity->moveToFirstCollision();
+        if (just_collided) {
+            // put it back in the list
+            entity->calculateBoundingPrismoid();
+            detectCollisions(entity, &colliding_entities);
         }
     }
+}
+
+void Game::detectCollisions(MovingEntity * entity, std::priority_queue<Util::KeyAndValue<float, MovingEntity*> > *colliding_entities)
+{
+    entity->clearCollisions();
+    for (int j = 0; j < (int)static_entities.size(); j++)
+        entity->detectCollision(static_entities[j]);
+    for (int j = 0; j < (int)moving_entities.size(); j++) {
+        MovingEntity * other_entity = moving_entities[j];
+        if (entity == other_entity)
+            continue;
+        entity->detectCollision(other_entity);
+    }
+    Util::push(colliding_entities, entity->getCollisionTime(), entity);
 }
 
 void Game::render(sf::RenderTarget *render_target)

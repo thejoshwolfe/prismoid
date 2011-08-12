@@ -22,6 +22,8 @@ private:
     std::vector<MovingEntity *> moving_entities;
     std::vector<StaticEntity *> static_entities;
     const sf::Input * input;
+
+    void detectCollisions(MovingEntity * entity, std::priority_queue<Util::KeyAndValue<float, MovingEntity*> > *colliding_entities);
 };
 
 #endif // GAME_H

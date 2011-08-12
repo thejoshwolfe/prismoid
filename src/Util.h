@@ -139,10 +139,30 @@ sf::Vector2<T> perp(sf::Vector2<T> vector)
 }
 
 template <typename K, typename V>
-void insert(std::multimap<K, V>* map, K key, V value)
+struct KeyAndValue {
+    K key;
+    V value;
+    KeyAndValue() {}
+    KeyAndValue(K key, V value) : key(key), value(value) {}
+    bool operator <(const KeyAndValue<K, V>& other) const
+    {
+        return key < other.key;
+    }
+};
+
+template <typename K, typename V>
+void push(std::priority_queue<KeyAndValue<K, V> > *queue, K key, V value)
 {
-    map->insert(std::pair<K, V>(key, value));
+    queue->push(KeyAndValue<K, V>(key, value));
 }
+template <typename T>
+void clear(std::priority_queue<T> * queue)
+{
+    if (!queue->empty())
+        *queue = std::priority_queue<T>();
+}
+
+
 
 template <typename T>
 T min(T a, T b)

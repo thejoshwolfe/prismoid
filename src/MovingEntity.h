@@ -21,10 +21,13 @@ public:
     virtual void getBoundingPrismoid(Prismoid *prismoid);
 
     virtual void doController(Game * game);
-
     void resetForNextFrame();
+
     void calculateBoundingPrismoid();
+    void clearCollisions() { Util::clear(&collisions); }
     void detectCollision(Entity * other);
+    float getCollisionTime() { return collisions.empty() ? 1 : collisions.top().key; }
+    bool moveToFirstCollision();
 
     void serialize(std::vector<byte>* buffer);
     static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
@@ -43,7 +46,7 @@ private:
 
     // temporary
     Prismoid bounding_prismoid;
-    std::multimap<float, Collision> collisions;
+    std::priority_queue<Util::KeyAndValue<float, Collision> > collisions;
     float frame_progress;
 };
 

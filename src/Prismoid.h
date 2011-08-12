@@ -53,6 +53,7 @@ public:
         getEdge(i, edge1);
         getEdge((i + 1) % size(), edge2);
     }
+    sf::Vector2f getNormal(int i);
 
 };
 
