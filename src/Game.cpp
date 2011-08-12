@@ -54,9 +54,8 @@ void Game::detectCollisions(MovingEntity * entity, std::priority_queue<Util::Key
         entity->detectCollision(static_entities[j]);
     for (int j = 0; j < (int)moving_entities.size(); j++) {
         MovingEntity * other_entity = moving_entities[j];
-        if (entity == other_entity)
-            continue;
-        entity->detectCollision(other_entity);
+        if (entity != other_entity)
+            entity->detectCollision(other_entity);
     }
     Util::push(colliding_entities, entity->getCollisionTime(), entity);
 }

@@ -146,7 +146,8 @@ struct KeyAndValue {
     KeyAndValue(K key, V value) : key(key), value(value) {}
     bool operator <(const KeyAndValue<K, V>& other) const
     {
-        return key < other.key;
+        // suprise! we want priority queues to give us the smallest one
+        return key > other.key;
     }
 };
 
