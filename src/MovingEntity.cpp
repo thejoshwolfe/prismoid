@@ -62,7 +62,7 @@ void MovingEntity::detectCollision(Entity *other)
             bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(this_edge, other_edge1, other_edge2, &collision_point);
             if (!is_collision)
                 continue;
-            Util::push(&collisions, collision_point.z, Collision(other, other_prismoid.getNormal(i)));
+            maybeAddCollision(collision_point.z, other, other_prismoid.getNormal(i));
         }
     }
     for (int i = 0; i < bounding_prismoid.size(); i++) {
@@ -75,9 +75,16 @@ void MovingEntity::detectCollision(Entity *other)
             bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
             if (!is_collision)
                 continue;
-            Util::push(&collisions, collision_point.z, Collision(other, -bounding_prismoid.getNormal(i)));
+            maybeAddCollision(collision_point.z, other, -bounding_prismoid.getNormal(i));
         }
     }
+}
+void MovingEntity::maybeAddCollision(float time, Entity *other, const sf::Vector2f &normal)
+{
+    // don't count it if we're moving away (which happens right after bouncing)
+    // or if we're exactly parallel
+    if (Util::dot(velocity, normal) < 0)
+        Util::push(&collisions, time, Collision(other, normal));
 }
 
 bool MovingEntity::moveToFirstCollision()

@@ -48,6 +48,8 @@ private:
     Prismoid bounding_prismoid;
     std::priority_queue<Util::KeyAndValue<float, Collision> > collisions;
     float frame_progress;
+
+    void maybeAddCollision(float time, Entity *other, const sf::Vector2f &normal);
 };
 
 #endif // MOVINGENTITY_H
