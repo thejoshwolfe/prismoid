@@ -163,6 +163,11 @@ void clear(std::priority_queue<T> * queue)
     if (!queue->empty())
         *queue = std::priority_queue<T>();
 }
+template <typename K, typename V>
+void insert(std::multimap<K, V> *map, K key, V value)
+{
+    map->insert(std::pair<K, V>(key, value));
+}
 
 
 
@@ -177,6 +182,11 @@ T max(T a, T b)
     return a > b ? a : b;
 }
 
+inline void assert(bool condition, std::string message)
+{
+    if (!condition)
+        throw message;
+}
 
 }
 

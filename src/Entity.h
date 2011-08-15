@@ -8,25 +8,28 @@ class Entity
 public:
     virtual ~Entity() {}
 
-    sf::Vector2f getCenter() { return center; }
-    float getElasticity() { return elasticity; }
-    float getFriction() { return friction; }
-
+    virtual const sf::Vector2f& getVelocity() const = 0;
     virtual void render(sf::RenderTarget * render_target);
 
-    virtual void getBoundingPrismoid(Prismoid * prismoid) = 0;
+    const bool is_moving_entity;
 
-protected:
+    // important
     sf::Vector2f center;
     sf::Vector2f size;
     sf::Color color;
     float elasticity;
     float friction;
 
-    Entity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, float friction) :
-        center(center), size(size), color(color), elasticity(elasticity), friction(friction) {}
+    // inferred, cached.
+    Prismoid bounding_prismoid;
+    // temporary
+    float frame_progress;
 
-    void getBoundingPolygon(std::vector<sf::Vector2f>* polygon);
+protected:
+    Entity(bool is_moving_entity, const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, float friction) :
+        is_moving_entity(is_moving_entity), center(center), size(size), color(color), elasticity(elasticity), friction(friction) {}
+
+    static void makeRectangle(std::vector<sf::Vector2f>* polygon, const sf::Vector2f &center, const sf::Vector2f &size);
 };
 
 #endif // ENTITY_H
