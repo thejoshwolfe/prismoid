@@ -6,11 +6,13 @@ Game::Game() :
     frame_counter(0)
 {
     moving_entities.push_back(new PlayerEntity(sf::Vector2f(30, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0)));
-    moving_entities.push_back(new MovingEntity(sf::Vector2f(30, -100), sf::Vector2f(30, 30), sf::Color::Magenta, 0.5, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new MovingEntity(sf::Vector2f(30, -100), sf::Vector2f(30, 30), sf::Color::Magenta, 0.51, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new MovingEntity(sf::Vector2f(90, -100), sf::Vector2f(30, 30), sf::Color::Magenta, 0.52, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new MovingEntity(sf::Vector2f(150, 50), sf::Vector2f(30, 30), sf::Color::Magenta, 0.53, 1.25, sf::Vector2f(0, 0)));
 
-    static_entities.push_back(new StaticEntity(sf::Vector2f(0, 0), sf::Vector2f(20, 600), sf::Color::Red, 0.5, 0.25));
-    static_entities.push_back(new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 0.5, 0.25));
-    static_entities.push_back(new StaticEntity(sf::Vector2f(500, 0), sf::Vector2f(20, 600), sf::Color::Red, 0.5, 0.25));
+    static_entities.push_back(new StaticEntity(sf::Vector2f(0, 0), sf::Vector2f(20, 600), sf::Color::Red, 1.0, 0.25));
+    static_entities.push_back(new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 1.0, 0.25));
+    static_entities.push_back(new StaticEntity(sf::Vector2f(500, 0), sf::Vector2f(20, 600), sf::Color::Red, 1.0, 0.25));
 }
 
 void Game::doFrame(const sf::Input * input)
@@ -159,6 +161,7 @@ void Game::invalidateCollisions(MovingEntity *entity)
     std::pair<std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator> range = collisions_by_entity.equal_range(entity);
     for (std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator iterator = range.first; iterator != range.second; iterator++)
         iterator->second->valid = false;
+    collisions_by_entity.erase(range.first, range.second);
     // put it back in the list
     entity->calculateBoundingPrismoid();
     detectCollisions(entity);
