@@ -6,13 +6,13 @@ The physics engine is 2d and geared toward side-scrolling platformers. Entities
 are made of n-sided polygons and do not rotate. I suppose this is kind of like
 the physics in The Incredible Machine.
 
-One of the major goals of this physics engine is to never let objects pass
-through walls or other objects. Firing two bullets directly toward each other
-might cause the bullets to pass through each other due to the discrete
-resolution of naive collision detection. This physics engine solves this problem
-by causing each moving object to effectively occupy the entire region of space
-it would pass through for the discrete time frame of collision detection; at
-least that's the plan.
+One of the major goals of this physics engine is correctness: never let objects
+pass through walls or other objects. For example, firing two bullets directly
+toward each other should cause the bullets to collide rather than pass through
+each other, and a stack of boxes should never occupy less height than the sum of
+the heights of the boxes. This physics engine attempts to approach the issue by
+plotting the intersection of moving 2d objects as 3d objects in spacetime.
+Collisions would then simply be intersections of polyhedrons.
 
 Not too much is demoable yet. Sorry.
 
