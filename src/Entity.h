@@ -1,7 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "Util.h"
+#include "Prismoid.h"
 
 class Entity
 {

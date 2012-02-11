@@ -1,20 +1,7 @@
 #ifndef PRISMOID_H
 #define PRISMOID_H
 
-#include <SFML/Graphics.hpp>
-
-struct Edge
-{
-    sf::Vector3f points[2];
-    Edge() {}
-    Edge(const sf::Vector3f &point1, const sf::Vector3f &point2)
-    {
-        points[0] = point1;
-        points[1] = point2;
-    }
-private:
-    Edge(const Edge &) {}; // non-copyable
-};
+#include "Util.h"
 
 // NOTE: this class does not prevent the "prismoid"-definition violation of
 // non-parallel corresponding edges in bases, therefore forming skew quadrilateral

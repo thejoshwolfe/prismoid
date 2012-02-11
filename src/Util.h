@@ -4,11 +4,23 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <limits>
-#include "Prismoid.h"
 
 typedef unsigned char byte;
 typedef int32_t int32;
 typedef int64_t int64;
+
+struct Edge
+{
+    sf::Vector3f points[2];
+    Edge() {}
+    Edge(const sf::Vector3f &point1, const sf::Vector3f &point2)
+    {
+        points[0] = point1;
+        points[1] = point2;
+    }
+private:
+    Edge(const Edge &) {}; // non-copyable
+};
 
 namespace Util {
 
