@@ -17,11 +17,8 @@ Collisions would then simply be intersections of polyhedrons.
 Not too much is demoable yet. Sorry.
 
 
+Links against sfml. Builds with eclipse 3.7 and eclipse-cdt 6.0.
 
-Build it with qmake and make.
-
-Installing sfml:
-    http://www.sfml-dev.org/tutorials/1.6/
-    Short version for Ubuntu (untested):
-    $ sudo apt-get install libcsfml-audio1.6 libcsfml-dev libcsfml-graphics1.6 libcsfml-network1.6 libcsfml-system1.6 libcsfml-window1.6 libsfml-audio1.6 libsfml-dev libsfml-graphics1.6 libsfml-network1.6 libsfml-system1.6 libsfml-window1.6
+Installing dependencies in Ubuntu (tested in 11.10 oneiric):
+    $ sudo apt-get install eclipse-cdt libsfml-dev
 
