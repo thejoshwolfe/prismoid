@@ -22,3 +22,22 @@ Links against sfml. Builds with eclipse 3.7 and eclipse-cdt 6.0.
 Installing dependencies in Ubuntu (tested in 11.10 oneiric):
     $ sudo apt-get install eclipse-cdt libsfml-dev
 
+
+Note about system-dependent include directories:
+I needed to tell the CDT editor about gcc's system include directories to hook
+up all the sweet content assist features properly. My values are hardcoded into
+this .cproject file, which I'm guessing will "just work" for everyone, but in
+case some mysterious include path warnings crop up in your workspace, you can
+find your own values with this command:
+    $ $(gcc -print-prog-name=cc1plus) -v < /dev/null && rm gccdump.s 
+The output should contain info on the #include <...> search path. Edit the CDT
+options through the GUI like this:
+    Right click the project
+    -> Properties
+    -> C/C++ General
+    -> Paths and Symbols
+    -> Includes
+    -> GNU C++
+or edit the .cproject file directly, but you'll want to refresh the project and
+poke the gui page after doing that to update the cache or something.
+
