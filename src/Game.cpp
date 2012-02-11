@@ -5,14 +5,14 @@
 Game::Game() :
     frame_counter(0)
 {
-    moving_entities.push_back(new PlayerEntity(sf::Vector2f(30, 0), sf::Vector2f(30, 30), sf::Color::Blue, 0.5, 1.25, sf::Vector2f(0, 0)));
-    moving_entities.push_back(new MovingEntity(sf::Vector2f(30, -100), sf::Vector2f(30, 30), sf::Color::Magenta, 0.51, 1.25, sf::Vector2f(0, 0)));
-    moving_entities.push_back(new MovingEntity(sf::Vector2f(90, -100), sf::Vector2f(30, 30), sf::Color::Magenta, 0.52, 1.25, sf::Vector2f(0, 0)));
-    moving_entities.push_back(new MovingEntity(sf::Vector2f(150, 50), sf::Vector2f(30, 30), sf::Color::Magenta, 0.53, 1.25, sf::Vector2f(0, 0)));
+    moving_entities.push_back(new PlayerEntity(Vector2(30, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
+    moving_entities.push_back(new MovingEntity(Vector2(30, -100), Vector2(30, 30), sf::Color::Magenta, 0.51, 1.25, Vector2(0, 0)));
+    moving_entities.push_back(new MovingEntity(Vector2(90, -100), Vector2(30, 30), sf::Color::Magenta, 0.52, 1.25, Vector2(0, 0)));
+    moving_entities.push_back(new MovingEntity(Vector2(150, 50), Vector2(30, 30), sf::Color::Magenta, 0.53, 1.25, Vector2(0, 0)));
 
-    static_entities.push_back(new StaticEntity(sf::Vector2f(0, 0), sf::Vector2f(20, 600), sf::Color::Red, 1.0, 0.25));
-    static_entities.push_back(new StaticEntity(sf::Vector2f(250, 305), sf::Vector2f(500, 10), sf::Color::Red, 1.0, 0.25));
-    static_entities.push_back(new StaticEntity(sf::Vector2f(500, 0), sf::Vector2f(20, 600), sf::Color::Red, 1.0, 0.25));
+    static_entities.push_back(new StaticEntity(Vector2(0, 0), Vector2(20, 600), sf::Color::Red, 1.0, 0.25));
+    static_entities.push_back(new StaticEntity(Vector2(250, 305), Vector2(500, 10), sf::Color::Red, 1.0, 0.25));
+    static_entities.push_back(new StaticEntity(Vector2(500, 0), Vector2(20, 600), sf::Color::Red, 1.0, 0.25));
 }
 
 void Game::doFrame(const sf::Input * input)
@@ -37,7 +37,7 @@ void Game::doFrame(const sf::Input * input)
 
     // move everything in the right order
     while (!collisions_by_time.empty()) {
-        float time = collisions_by_time.top().key;
+        bigint time = collisions_by_time.top().key;
         std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
         collisions_by_time.pop();
         if (collision->valid)
@@ -58,7 +58,7 @@ void Game::detectCollisions(MovingEntity * entity)
     }
     if (!ever_added) {
         // add a fake collision so that the entity will be updated at all
-        sf::Vector2f dummy_normal;
+        Vector2 dummy_normal;
         maybeAddCollision(1, entity, NULL, dummy_normal);
     }
 }
@@ -72,11 +72,11 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
         for (int j = 0; j < entity->bounding_prismoid.size(); j++) {
             Edge this_edge;
             entity->bounding_prismoid.getEdge(j, &this_edge);
-            sf::Vector3f collision_point;
+            Vector3 collision_point;
             bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(this_edge, other_edge1, other_edge2, &collision_point);
             if (!is_collision)
                 continue;
-            sf::Vector2f normal = other->bounding_prismoid.getNormal(i);
+            Vector2 normal = other->bounding_prismoid.getNormal(i);
             ever_added |= maybeAddCollision(collision_point.z, entity, other, normal);
         }
     }
@@ -86,18 +86,18 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
         for (int j = 0; j < other->bounding_prismoid.size(); j++) {
             Edge other_edge;
             other->bounding_prismoid.getEdge(j, &other_edge);
-            sf::Vector3f collision_point;
+            Vector3 collision_point;
             bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
             if (!is_collision)
                 continue;
-            sf::Vector2f normal = -entity->bounding_prismoid.getNormal(i);
+            Vector2 normal = -entity->bounding_prismoid.getNormal(i);
             ever_added |= maybeAddCollision(collision_point.z, entity, other, normal);
         }
     }
     return ever_added;
 }
 
-bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const sf::Vector2f &normal)
+bool Game::maybeAddCollision(bigint time, MovingEntity *entity, Entity *other, const Vector2 &normal)
 {
     // don't count it if we're moving away (which happens right after bouncing)
     // or if we're exactly parallel
@@ -111,13 +111,13 @@ bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, co
     return true;
 }
 
-void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
+void Game::doCollision(bigint time, std::tr1::shared_ptr<Collision> collision)
 {
     MovingEntity * entity = collision->entity;
     Entity * other = collision->other;
 
     // snap to the collision point
-    entity->center += (time - entity->frame_progress) * entity->velocity;
+    entity->center += (bigint)(time - entity->frame_progress) * entity->velocity;
     entity->frame_progress = time;
 
     if (other == NULL) {
@@ -128,21 +128,21 @@ void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
     if (other->is_moving_entity) {
         // snap the other to the collition point
         MovingEntity * other_moving_entity = static_cast<MovingEntity*>(other);
-        other_moving_entity->center += (time - other_moving_entity->frame_progress) * other_moving_entity->velocity;
+        other_moving_entity->center += (bigint)(time - other_moving_entity->frame_progress) * other_moving_entity->velocity;
         other_moving_entity->frame_progress = time;
     }
 
     // bounce
-    sf::Vector2f normal = Util::normalized(collision->normal);
-    float elasticity = entity->elasticity * other->elasticity;
-    sf::Vector2f relative_velocity = entity->velocity - other->getVelocity();
-    sf::Vector2f normal_component = Util::dot(relative_velocity, normal) * normal;
-    sf::Vector2f tangent_component = relative_velocity - normal_component;
-    sf::Vector2f normal_force = -(1 + elasticity) * normal_component;
-    float friction_coefficient = entity->friction * other->friction;
-    float friction_magnitude = Util::min(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
-    sf::Vector2f friction_force = -friction_magnitude * Util::normalized(tangent_component);
-    sf::Vector2f total_force = normal_force + friction_force;
+    Vector2 normal = Util::normalized(collision->normal);
+    bigint elasticity = entity->elasticity * other->elasticity;
+    Vector2 relative_velocity = entity->velocity - other->getVelocity();
+    Vector2 normal_component = Util::dot(relative_velocity, normal) * normal;
+    Vector2 tangent_component = relative_velocity - normal_component;
+    Vector2 normal_force = (bigint)(-(1 + elasticity)) * normal_component;
+    bigint friction_coefficient = entity->friction * other->friction;
+    bigint friction_magnitude = Util::min((bigint)(friction_coefficient * Util::magnitude(normal_force)), Util::magnitude(tangent_component));
+    Vector2 friction_force = (bigint)(-friction_magnitude) * Util::normalized(tangent_component);
+    Vector2 total_force = normal_force + friction_force;
     entity->velocity += total_force;
     if (other->is_moving_entity) {
         // Newton's 3rd
@@ -169,12 +169,13 @@ void Game::invalidateCollisions(MovingEntity *entity)
 
 void Game::render(sf::RenderTarget *render_target)
 {
-    render_target->GetDefaultView().SetCenter(moving_entities[0]->center);
+    render_target->GetDefaultView().SetCenter(0, 0);
+    Vector2 virtual_center = moving_entities[0]->center;
 
     for (int i = 0; i < (int)static_entities.size(); i++)
-        static_entities[i]->render(render_target);
+        static_entities[i]->render(virtual_center, render_target);
     for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->render(render_target);
+        moving_entities[i]->render(virtual_center,render_target);
 }
 
 void Game::saveState(std::vector<byte>* buffer)

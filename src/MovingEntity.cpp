@@ -3,7 +3,7 @@
 #include "Game.h"
 #include "PlayerEntity.h"
 
-void MovingEntity::render(sf::RenderTarget *render_target)
+void MovingEntity::render(Vector2 virtual_center, sf::RenderTarget *render_target)
 {
     if (false) {
         // draw motion bounding polygon
@@ -11,12 +11,12 @@ void MovingEntity::render(sf::RenderTarget *render_target)
         for (int i = 0; i < bounding_prismoid.size(); i++) {
             Edge edge;
             bounding_prismoid.getEdge(i, &edge);
-            shape.AddPoint(sf::Vector2f(edge.points[0].x, edge.points[0].y), sf::Color::Green);
+            shape.AddPoint(Util::toRenderPoint(virtual_center, Vector2(edge.points[0].x, edge.points[0].y)), sf::Color::Green);
         }
         render_target->Draw(shape);
     }
 
-    Entity::render(render_target);
+    Entity::render(virtual_center, render_target);
 }
 
 void MovingEntity::doController(Game *)
@@ -26,14 +26,14 @@ void MovingEntity::doController(Game *)
 
 void MovingEntity::calculateBoundingPrismoid()
 {
-    sf::Vector2f remaining_velocity = (1 - frame_progress) * velocity;
-    std::vector<sf::Vector2f> here;
+    Vector2 remaining_velocity = (bigint)(1 - frame_progress) * velocity;
+    std::vector<Vector2> here;
     makeRectangle(&here, center, size);
 
     bounding_prismoid.clearEdges();
     bounding_prismoid.setZ(frame_progress, 1);
     for (int i = 0; i < (int)here.size(); i++) {
-        sf::Vector2f point = here[i];
+        Vector2 point = here[i];
         bounding_prismoid.addEdge(point, point + remaining_velocity);
     }
 }
@@ -52,12 +52,12 @@ void MovingEntity::serialize(std::vector<byte> *buffer)
 MovingEntity * MovingEntity::deserialize(std::vector<byte>::const_iterator* buffer)
 {
     EntityType type = (EntityType)Util::deserialize<int32>(buffer);
-    sf::Vector2f center = Util::deserialize<sf::Vector2f>(buffer);
-    sf::Vector2f size = Util::deserialize<sf::Vector2f>(buffer);
+    Vector2 center = Util::deserialize<Vector2>(buffer);
+    Vector2 size = Util::deserialize<Vector2>(buffer);
     sf::Color color = Util::deserialize<sf::Color>(buffer);
     float elasticity = Util::deserialize<float>(buffer);
     float friction = Util::deserialize<float>(buffer);
-    sf::Vector2f velocity = Util::deserialize<sf::Vector2f>(buffer);
+    Vector2 velocity = Util::deserialize<Vector2>(buffer);
     switch (type) {
         case EntityType_MovingEntity:
             return new MovingEntity(center, size, color, elasticity, friction, velocity);

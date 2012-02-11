@@ -11,10 +11,10 @@
 class Prismoid
 {
 private:
-    float z[2];
-    std::vector<sf::Vector2f> bases[2];
+    bigint z[2];
+    std::vector<Vector2> bases[2];
 public:
-    void setZ(float z1, float z2)
+    void setZ(bigint z1, bigint z2)
     {
         z[0] = z1;
         z[1] = z2;
@@ -25,22 +25,22 @@ public:
         bases[0].clear();
         bases[1].clear();
     }
-    void addEdge(const sf::Vector2f &point1, const sf::Vector2f &point2)
+    void addEdge(const Vector2 &point1, const Vector2 &point2)
     {
         bases[0].push_back(point1);
         bases[1].push_back(point2);
     }
     void getEdge(int i, Edge * edge) const
     {
-        *edge = Edge(sf::Vector3f(bases[0][i].x, bases[0][i].y, z[0]),
-                     sf::Vector3f(bases[1][i].x, bases[1][i].y, z[1]));
+        *edge = Edge(Vector3(bases[0][i].x, bases[0][i].y, z[0]),
+                     Vector3(bases[1][i].x, bases[1][i].y, z[1]));
     }
     void getFace(int i, Edge * edge1, Edge * edge2) const
     {
         getEdge(i, edge1);
         getEdge((i + 1) % size(), edge2);
     }
-    sf::Vector2f getNormal(int i);
+    Vector2 getNormal(int i);
 
 };
 

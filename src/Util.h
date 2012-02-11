@@ -5,15 +5,20 @@
 #include <cmath>
 #include <limits>
 
+#include <gmpxx.h>
+typedef mpz_class bigint;
+typedef sf::Vector2<bigint> Vector2;
+typedef sf::Vector3<bigint> Vector3;
+
 typedef unsigned char byte;
 typedef int32_t int32;
 typedef int64_t int64;
 
 struct Edge
 {
-    sf::Vector3f points[2];
+    Vector3 points[2];
     Edge() {}
-    Edge(const sf::Vector3f &point1, const sf::Vector3f &point2)
+    Edge(const Vector3 &point1, const Vector3 &point2)
     {
         points[0] = point1;
         points[1] = point2;
@@ -45,11 +50,17 @@ T deserialize(std::vector<byte>::const_iterator* buffer)
     return value;
 }
 
-inline float angleOfVector(sf::Vector2f vector)
+inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
+{
+    Vector2 relative_point = point - virtual_center;
+    return sf::Vector2f(relative_point.x.get_d(), relative_point.y.get_d());
+}
+
+inline float angleOfVector(Vector2 vector)
 {
     if (vector.y == 0 && vector.x == 0)
         return 0; // whatever
-    return std::atan2(vector.y, vector.x);
+    return std::atan2(vector.y.get_d(), vector.x.get_d());
 }
 
 inline float euclideanMod(float numerator, float denominator)
@@ -65,15 +76,15 @@ inline int euclideanMod(int numerator, int denominator)
     return (numerator % denominator + denominator) % denominator;
 }
 
-inline float magnitude(sf::Vector2f vector)
+inline bigint magnitude(Vector2 vector)
 {
-    return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+    return sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
-inline sf::Vector2f normalized(sf::Vector2f vector)
+inline Vector2 normalized(Vector2 vector)
 {
-    float _magnitude = magnitude(vector);
-    return _magnitude == 0 ? sf::Vector2f(0, 0) : vector / _magnitude;
+    bigint _magnitude = magnitude(vector);
+    return _magnitude == 0 ? Vector2(0, 0) : vector / _magnitude;
 }
 
 template <typename T>
@@ -95,31 +106,25 @@ sf::Vector3<T> cross(const sf::Vector3<T> &a, const sf::Vector3<T> &b)
                           a.x * b.y - a.y * b.x);
 }
 
-template <typename T>
-bool isZero(T value)
-{
-    return std::fabs(value) < std::numeric_limits<T>::epsilon();
-}
-
-inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, sf::Vector3f *output_intersection_point)
+inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
 {
     // http://en.wikipedia.org/wiki/Line-plane_intersection
-    sf::Vector3f edge_point = edge.points[0];
-    sf::Vector3f edge_vector = edge.points[1] - edge_point;
-    sf::Vector3f plane_point = plane_edge1.points[0];
-    sf::Vector3f plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
-    float numerator = dot(plane_point - edge_point, plane_vector);
-    sf::Vector3f intersection_point;
-    if (isZero(numerator)) {
+    Vector3 edge_point = edge.points[0];
+    Vector3 edge_vector = edge.points[1] - edge_point;
+    Vector3 plane_point = plane_edge1.points[0];
+    Vector3 plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
+    bigint numerator = dot(plane_point - edge_point, plane_vector);
+    Vector3 intersection_point;
+    if (numerator == 0) {
         // intersects immediately
         intersection_point = edge_point;
     } else {
-        float denominator = dot(edge_vector, plane_vector);
-        if (isZero(denominator)) {
+        bigint denominator = dot(edge_vector, plane_vector);
+        if (denominator == 0) {
             // parallel and not intersecting
             return false;
         }
-        float percent_to_intersection = numerator / denominator;
+        bigint percent_to_intersection = numerator / denominator;
         // check the bounds of the edge
         if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
             return false;
@@ -127,14 +132,14 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     }
 
     // check the bounds of the face
-    sf::Vector3f plane_points[] = {
+    Vector3 plane_points[] = {
         plane_edge1.points[0], plane_edge1.points[1], plane_edge2.points[1], plane_edge2.points[0],
     };
-    const int plane_points_count = sizeof(plane_points) / sizeof(sf::Vector3f);
+    const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
     for (int i = 0; i < plane_points_count; i++) {
-        sf::Vector3f edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
-        sf::Vector3f edge2 = plane_points[(i + 1) % plane_points_count] - plane_points[i];
-        sf::Vector3f inward_direction = cross(edge2, cross(edge1, edge2));
+        Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
+        Vector3 edge2 = plane_points[(i + 1) % plane_points_count] - plane_points[i];
+        Vector3 inward_direction = cross(edge2, cross(edge1, edge2));
         bool is_inside = dot(inward_direction, intersection_point - plane_points[i]) >= 0;
         if (!is_inside)
             return false; // miss

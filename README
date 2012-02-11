@@ -17,10 +17,10 @@ Collisions would then simply be intersections of polyhedrons.
 Not too much is demoable yet. Sorry.
 
 
-Links against sfml. Builds with eclipse 3.7 and eclipse-cdt 6.0.
+Links against sfml and gmp. Builds with eclipse 3.7 and eclipse-cdt 6.0.
 
 Installing dependencies in Ubuntu (tested in 11.10 oneiric):
-    $ sudo apt-get install eclipse-cdt libsfml-dev
+    $ sudo apt-get install eclipse-cdt libsfml-dev libgmp-dev
 
 
 Note about system-dependent include directories:

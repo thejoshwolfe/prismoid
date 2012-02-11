@@ -6,19 +6,19 @@
 class StaticEntity : public Entity
 {
 public:
-    StaticEntity(const sf::Vector2f & center, const sf::Vector2f & size, const sf::Color & color, float elasticity, float friction) :
+    StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, float elasticity, float friction) :
         Entity(false, center, size, color, elasticity, friction)
     {
         bounding_prismoid.setZ(0, 1);
-        std::vector<sf::Vector2f> here;
+        std::vector<Vector2> here;
         makeRectangle(&here, center, size);
         for (int i = 0; i < (int)here.size(); i++)
             bounding_prismoid.addEdge(here[i], here[i]);
     }
 
-    virtual const sf::Vector2f& getVelocity() const { return zero; }
+    virtual const Vector2& getVelocity() const { return zero; }
 private:
-    static const sf::Vector2f zero;
+    static const Vector2 zero;
 };
 
 #endif // STATICENTITY_H
