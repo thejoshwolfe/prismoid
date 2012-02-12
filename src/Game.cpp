@@ -177,21 +177,3 @@ void Game::render(sf::RenderTarget *render_target)
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->render(virtual_center,render_target);
 }
-
-void Game::saveState(std::vector<byte>* buffer)
-{
-    Util::serialize(buffer, frame_counter);
-    Util::serialize(buffer, (int)moving_entities.size());
-    for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->serialize(buffer);
-}
-void Game::loadState(std::vector<byte>::const_iterator* buffer)
-{
-    frame_counter = Util::deserialize<int64>(buffer);
-    for (int i = 0; i < (int)moving_entities.size(); i++)
-        delete moving_entities[i];
-    moving_entities.clear();
-    int moving_entities_size = Util::deserialize<int>(buffer);
-    for (int i = 0; i < moving_entities_size; i++)
-        moving_entities.push_back(MovingEntity::deserialize(buffer));
-}

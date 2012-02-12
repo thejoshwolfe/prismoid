@@ -6,7 +6,7 @@
 class StaticEntity : public Entity
 {
 public:
-    StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, float elasticity, float friction) :
+    StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, bigint elasticity, bigint friction) :
         Entity(false, center, size, color, elasticity, friction)
     {
         bounding_prismoid.setZ(0, 1);

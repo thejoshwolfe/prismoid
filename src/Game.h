@@ -14,9 +14,6 @@ public:
     void doFrame(const sf::Input * input);
     void render(sf::RenderTarget * render_target);
 
-    void saveState(std::vector<byte>* buffer);
-    void loadState(std::vector<byte>::const_iterator* buffer);
-
     const sf::Input * getInput() { return input; }
 
 private:

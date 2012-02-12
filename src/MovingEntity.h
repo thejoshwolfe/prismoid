@@ -12,7 +12,7 @@ public:
         EntityType_MovingEntity,
         EntityType_PlayerEntity,
     };
-    MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, float elasticity, float friction, const Vector2 & velocity) :
+    MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, bigint elasticity, bigint friction, const Vector2 & velocity) :
         Entity(true, center, size, color, elasticity, friction), velocity(velocity) {}
 
     virtual EntityType getType() { return EntityType_MovingEntity; }
@@ -23,10 +23,6 @@ public:
 
     void calculateBoundingPrismoid();
 
-    void serialize(std::vector<byte>* buffer);
-    static MovingEntity * deserialize(std::vector<byte>::const_iterator* buffer);
-
-    // important
     Vector2 velocity;
     virtual const Vector2& getVelocity() const { return velocity; }
 };

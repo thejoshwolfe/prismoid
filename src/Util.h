@@ -29,38 +29,10 @@ private:
 
 namespace Util {
 
-const float pi = 3.14159265f;
-const float two_pi = 6.28318531f;
-
-template <typename T>
-void serialize(std::vector<byte>* buffer, T value)
-{
-    byte * byte_pointer = reinterpret_cast<byte*>(&value);
-    for (int i = 0; i < (int)sizeof(value); i++)
-        buffer->push_back(byte_pointer[i]);
-}
-
-template <typename T>
-T deserialize(std::vector<byte>::const_iterator* buffer)
-{
-    T value;
-    byte * byte_pointer = reinterpret_cast<byte*>(&value);
-    for (int i = 0; i < (int)sizeof(value); i++, (*buffer)++)
-        byte_pointer[i] = *(*buffer);
-    return value;
-}
-
 inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
 {
     Vector2 relative_point = point - virtual_center;
     return sf::Vector2f(relative_point.x.get_d(), relative_point.y.get_d());
-}
-
-inline float angleOfVector(Vector2 vector)
-{
-    if (vector.y == 0 && vector.x == 0)
-        return 0; // whatever
-    return std::atan2(vector.y.get_d(), vector.x.get_d());
 }
 
 inline float euclideanMod(float numerator, float denominator)
