@@ -2,17 +2,18 @@
 
 #include "PlayerEntity.h"
 
+#include "TiledTmx.h"
+
 Game::Game() :
     frame_counter(0)
 {
-    moving_entities.push_back(new PlayerEntity(Vector2(30, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
-    moving_entities.push_back(new MovingEntity(Vector2(30, -100), Vector2(30, 30), sf::Color::Magenta, 0.51, 1.25, Vector2(0, 0)));
-    moving_entities.push_back(new MovingEntity(Vector2(90, -100), Vector2(30, 30), sf::Color::Magenta, 0.52, 1.25, Vector2(0, 0)));
-    moving_entities.push_back(new MovingEntity(Vector2(150, 50), Vector2(30, 30), sf::Color::Magenta, 0.53, 1.25, Vector2(0, 0)));
+    moving_entities.push_back(new PlayerEntity(Vector2(-100, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
 
-    static_entities.push_back(new StaticEntity(Vector2(0, 0), Vector2(20, 600), sf::Color::Red, 1.0, 0.25));
-    static_entities.push_back(new StaticEntity(Vector2(250, 305), Vector2(500, 10), sf::Color::Red, 1.0, 0.25));
-    static_entities.push_back(new StaticEntity(Vector2(500, 0), Vector2(20, 600), sf::Color::Red, 1.0, 0.25));
+    TiledTmx * map = TiledTmx::load("resources/test.tmx");
+    for (int y = 0; y < map->height(); y++)
+        for (int x = 0; x < map->width(); x++)
+            if (map->getTile(x, y))
+                static_entities.push_back(new StaticEntity(Vector2(x * 32, y * 32), Vector2(32, 32), sf::Color::Red, 1.0, 0.25));
 }
 
 void Game::doFrame(const sf::Input * input)
@@ -175,5 +176,5 @@ void Game::render(sf::RenderTarget *render_target)
     for (int i = 0; i < (int)static_entities.size(); i++)
         static_entities[i]->render(virtual_center, render_target);
     for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->render(virtual_center,render_target);
+        moving_entities[i]->render(virtual_center, render_target);
 }

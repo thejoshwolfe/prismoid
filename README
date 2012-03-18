@@ -11,13 +11,17 @@ pass through walls or other objects. For example, firing two bullets directly
 toward each other should cause the bullets to collide rather than pass through
 each other, and a stack of boxes should never occupy less height than the sum of
 the heights of the boxes. This physics engine attempts to approach the issue by
-plotting the intersection of moving 2d objects as 3d objects in spacetime.
-Collisions would then simply be intersections of polyhedrons.
+plotting the intersection of moving 2d objects a-priori as 3d objects in
+spacetime. Collisions would then simply be intersections of polyhedrons.
 
 Not too much is demoable yet. Sorry.
 
 
-Links against sfml and gmp. Builds with eclipse 3.7 and eclipse-cdt 6.0.
+Builds with eclipse 3.7 and eclipse-cdt 6.0.
+Link dependencies:
+- sfml
+- gmp
+- zlib
 
 Installing dependencies in Ubuntu (tested in 11.10 oneiric):
     $ sudo apt-get install eclipse-cdt libsfml-dev libgmp-dev

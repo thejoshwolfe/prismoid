@@ -24,7 +24,7 @@ struct Edge
         points[1] = point2;
     }
 private:
-    Edge(const Edge &) {}; // non-copyable
+    Edge(const Edge &) {} // non-copyable
 };
 
 namespace Util {
@@ -59,18 +59,18 @@ inline Vector2 normalized(Vector2 vector)
     return _magnitude == 0 ? Vector2(0, 0) : vector / _magnitude;
 }
 
-template <typename T>
+template<typename T>
 T dot(sf::Vector2<T> a, sf::Vector2<T> b)
 {
     return a.x * b.x + a.y * b.y;
 }
-template <typename T>
+template<typename T>
 T dot(sf::Vector3<T> a, sf::Vector3<T> b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-template <typename T>
+template<typename T>
 sf::Vector3<T> cross(const sf::Vector3<T> &a, const sf::Vector3<T> &b)
 {
     return sf::Vector3<T>(a.y * b.z - a.z * b.y,
@@ -104,9 +104,7 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     }
 
     // check the bounds of the face
-    Vector3 plane_points[] = {
-        plane_edge1.points[0], plane_edge1.points[1], plane_edge2.points[1], plane_edge2.points[0],
-    };
+    Vector3 plane_points[] = { plane_edge1.points[0], plane_edge1.points[1], plane_edge2.points[1], plane_edge2.points[0], };
     const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
     for (int i = 0; i < plane_points_count; i++) {
         Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
@@ -122,50 +120,49 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     return true;
 }
 
-template <typename T>
+template<typename T>
 sf::Vector2<T> perp(sf::Vector2<T> vector)
 {
     return sf::Vector2<T>(vector.y, -vector.x);
 }
 
-template <typename K, typename V>
-struct KeyAndValue {
+template<typename K, typename V>
+struct KeyAndValue
+{
     K key;
     V value;
     KeyAndValue() {}
     KeyAndValue(K key, V value) : key(key), value(value) {}
     bool operator <(const KeyAndValue<K, V>& other) const
     {
-        // suprise! we want priority queues to give us the smallest one
+        // surprise! we want priority queues to give us the smallest one
         return key > other.key;
     }
 };
 
-template <typename K, typename V>
+template<typename K, typename V>
 void push(std::priority_queue<KeyAndValue<K, V> > *queue, K key, V value)
 {
     queue->push(KeyAndValue<K, V>(key, value));
 }
-template <typename T>
+template<typename T>
 void clear(std::priority_queue<T> * queue)
 {
     if (!queue->empty())
         *queue = std::priority_queue<T>();
 }
-template <typename K, typename V>
+template<typename K, typename V>
 void insert(std::multimap<K, V> *map, K key, V value)
 {
     map->insert(std::pair<K, V>(key, value));
 }
 
-
-
-template <typename T>
+template<typename T>
 T min(T a, T b)
 {
     return a < b ? a : b;
 }
-template <typename T>
+template<typename T>
 T max(T a, T b)
 {
     return a > b ? a : b;
@@ -175,6 +172,22 @@ inline void assert(bool condition, std::string message)
 {
     if (!condition)
         throw message;
+}
+
+// source for trim functions: http://stackoverflow.com/a/217605/367916
+static inline std::string &ltrim(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return s;
+}
+static inline std::string &rtrim(std::string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+}
+static inline std::string &trim(std::string &s)
+{
+    return ltrim(rtrim(s));
 }
 
 }
