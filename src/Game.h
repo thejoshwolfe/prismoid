@@ -3,6 +3,8 @@
 
 #include "MovingEntity.h"
 #include "StaticEntity.h"
+#include "TiledTmx.h"
+
 #include <tr1/memory>
 
 class Game
@@ -19,7 +21,10 @@ public:
 private:
     // important
     std::vector<MovingEntity *> moving_entities;
-    std::vector<StaticEntity *> static_entities;
+    int tile_size;
+    int layer_width;
+    int layer_height;
+    StaticEntity ** physics_layer;
 
     // temporary
     const sf::Input * input;
@@ -40,6 +45,9 @@ private:
     bool maybeAddCollision(bigint time, MovingEntity * entity, Entity * other, const Vector2 &normal);
     void doCollision(bigint time, std::tr1::shared_ptr<Collision> collision);
     void invalidateCollisions(MovingEntity *entity);
+
+    Rectangle getBoundingRectangle(const Prismoid &prismoid);
+    void getStaticEntities(std::vector<StaticEntity *> &static_entities, const Rectangle &bounding_rectangle);
 };
 
 #endif // GAME_H

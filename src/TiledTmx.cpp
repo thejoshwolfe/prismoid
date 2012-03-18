@@ -9,9 +9,9 @@
 #include <iostream>
 #include <cstdlib>
 
-const unsigned TiledTmx::FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
-const unsigned TiledTmx::FLIPPED_VERTICALLY_FLAG = 0x40000000;
-const unsigned TiledTmx::FLIPPED_DIAGONALLY_FLAG = 0x20000000;
+const unsigned Tile::FLIPPED_HORIZONTALLY_FLAG = 0x80000000;
+const unsigned Tile::FLIPPED_VERTICALLY_FLAG = 0x40000000;
+const unsigned Tile::FLIPPED_DIAGONALLY_FLAG = 0x20000000;
 
 TiledTmx * TiledTmx::load(std::string filename)
 {
@@ -34,6 +34,8 @@ void TiledTmx::internalLoad()
     assertEquals<std::string> (root.attribute("orientation").value(), "orthogonal");
     map_width = std::atoi(root.attribute("width").value());
     map_height = std::atoi(root.attribute("height").value());
+    tile_size = std::atoi(root.attribute("tilewidth").value());
+    assertEquals(std::atoi(root.attribute("tileheight").value()), tile_size);
     for (pugi::xml_node node = root.first_child(); !node.empty(); node = node.next_sibling()) {
         std::string name = node.name();
         if (name == "tileset") {
@@ -41,12 +43,8 @@ void TiledTmx::internalLoad()
         } else if (name == "objectgroup") {
             // TODO
         } else if (name == "layer") {
-            {
-                int layer_width = std::atoi(node.attribute("width").value());
-                int layer_height = std::atoi(node.attribute("height").value());
-                assertEquals(layer_width, map_width);
-                assertEquals(layer_height, map_height);
-            }
+            assertEquals(std::atoi(node.attribute("width").value()), map_width);
+            assertEquals(std::atoi(node.attribute("height").value()), map_height);
             layer = new int[map_width * map_height];
 
             pugi::xml_node data_node = node.child("data");
@@ -61,20 +59,14 @@ void TiledTmx::internalLoad()
             int tile_index = 0;
             for (int y = 0; y < map_height; y++) {
                 for (int x = 0; x < map_width; x++) {
-                    unsigned global_tile_id = 0;
-                    global_tile_id |= data[tile_index + 0] << 0;
-                    global_tile_id |= data[tile_index + 1] << 8;
-                    global_tile_id |= data[tile_index + 2] << 16;
-                    global_tile_id |= data[tile_index + 3] << 24;
+                    unsigned tile_value = 0;
+                    tile_value |= data[tile_index + 0] << 0;
+                    tile_value |= data[tile_index + 1] << 8;
+                    tile_value |= data[tile_index + 2] << 16;
+                    tile_value |= data[tile_index + 3] << 24;
                     tile_index += 4;
 
-                    // flips are not supported
-                    assertEquals<unsigned int>(global_tile_id & FLIPPED_HORIZONTALLY_FLAG, 0);
-                    assertEquals<unsigned int>(global_tile_id & FLIPPED_VERTICALLY_FLAG, 0);
-                    assertEquals<unsigned int>(global_tile_id & FLIPPED_DIAGONALLY_FLAG, 0);
-                    global_tile_id &= ~(FLIPPED_HORIZONTALLY_FLAG | FLIPPED_VERTICALLY_FLAG | FLIPPED_DIAGONALLY_FLAG);
-
-                    setTile(x, y, global_tile_id);
+                    setTile(x, y, tile_value);
                 }
             }
         } else

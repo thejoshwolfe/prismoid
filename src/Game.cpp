@@ -2,18 +2,26 @@
 
 #include "PlayerEntity.h"
 
-#include "TiledTmx.h"
-
 Game::Game(std::string filename) :
     frame_counter(0)
 {
     moving_entities.push_back(new PlayerEntity(Vector2(-100, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
 
     TiledTmx * map = TiledTmx::load(filename);
-    for (int y = 0; y < map->height(); y++)
-        for (int x = 0; x < map->width(); x++)
-            if (map->getTile(x, y))
-                static_entities.push_back(new StaticEntity(Vector2(x * 32, y * 32), Vector2(32, 32), sf::Color::Red, 1.0, 0.25));
+    tile_size = map->tileSize();
+    layer_width = map->width();
+    layer_height = map->height();
+    physics_layer = new StaticEntity*[layer_width * layer_height];
+    for (int y = 0; y < layer_height; y++) {
+        for (int x = 0; x < layer_width; x++) {
+            Tile tile = map->getTile(x, y);
+            StaticEntity * entity = NULL;
+            if (tile.global_id() != 0)
+                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size), sf::Color::Red, 0, 0);
+            physics_layer[y * layer_width + x] = entity;
+        }
+    }
+    delete map;
 }
 
 void Game::doFrame(const sf::Input * input)
@@ -50,8 +58,15 @@ void Game::doFrame(const sf::Input * input)
 void Game::detectCollisions(MovingEntity * entity)
 {
     bool ever_added = false;
+
+    // only check for static entities in the tiles we'll be intersecting with.
+    Rectangle bounding_rectangle = getBoundingRectangle(entity->bounding_prismoid);
+    std::vector<StaticEntity *> static_entities;
+    getStaticEntities(static_entities, bounding_rectangle);
     for (int j = 0; j < (int)static_entities.size(); j++)
         ever_added |= detectCollision(entity, static_entities[j]);
+
+    // O(n^2) for collision detection with other moving entities.
     for (int j = 0; j < (int)moving_entities.size(); j++) {
         MovingEntity * other_entity = moving_entities[j];
         if (entity != other_entity)
@@ -173,8 +188,56 @@ void Game::render(sf::RenderTarget *render_target)
     render_target->GetDefaultView().SetCenter(0, 0);
     Vector2 virtual_center = moving_entities[0]->center;
 
+    bigint width_apothem = render_target->GetWidth() / 2;
+    bigint height_apothem = render_target->GetHeight() / 2;
+    Rectangle bounding_rectangle(virtual_center.x - width_apothem, virtual_center.y - height_apothem,
+                                 virtual_center.x + width_apothem, virtual_center.y + height_apothem);
+    std::vector<StaticEntity *> static_entities;
+    getStaticEntities(static_entities, bounding_rectangle);
     for (int i = 0; i < (int)static_entities.size(); i++)
         static_entities[i]->render(virtual_center, render_target);
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->render(virtual_center, render_target);
+}
+
+Rectangle Game::getBoundingRectangle(const Prismoid &prismoid)
+{
+    Edge edge;
+    // initialize min and max with just any value that's in the prismoid.
+    prismoid.getEdge(0, &edge);
+    Vector2 min(edge.points[0].x, edge.points[0].y);
+    Vector2 max = min;
+    for (int i = 0; i < prismoid.size(); i++) {
+        prismoid.getEdge(i, &edge);
+        for (int z = 0; z < 2; z++) {
+            bigint x = edge.points[z].x;
+            bigint y = edge.points[z].y;
+            min.x = Util::min(min.x, x);
+            min.y = Util::min(min.y, y);
+            max.x = Util::max(max.x, x);
+            max.y = Util::max(max.y, y);
+        }
+    }
+    return Rectangle(min.x, min.y, max.x, max.y);
+}
+
+void Game::getStaticEntities(std::vector<StaticEntity *> &static_entities, const Rectangle &bounding_rectangle)
+{
+    int min_x = Util::toTileIndexFloored(bounding_rectangle.Left, tile_size);
+    int min_y = Util::toTileIndexFloored(bounding_rectangle.Top, tile_size);
+    int max_x = Util::toTileIndexCeilinged(bounding_rectangle.Right, tile_size);
+    int max_y = Util::toTileIndexCeilinged(bounding_rectangle.Bottom, tile_size);
+
+    min_x = Util::max(min_x, 0);
+    min_y = Util::max(min_y, 0);
+    max_x = Util::min(max_x, layer_width - 1);
+    max_y = Util::min(max_y, layer_height - 1);
+
+    for (int y = min_y; y <= max_y; y++) {
+        for (int x = min_x; x <= max_x; x++) {
+            StaticEntity * entity = physics_layer[y * layer_width + x];
+            if (entity != NULL)
+                static_entities.push_back(entity);
+        }
+    }
 }

@@ -9,6 +9,7 @@
 typedef mpz_class bigint;
 typedef sf::Vector2<bigint> Vector2;
 typedef sf::Vector3<bigint> Vector3;
+typedef sf::Rect<bigint> Rectangle;
 
 typedef unsigned char byte;
 typedef int32_t int32;
@@ -29,6 +30,15 @@ private:
 
 namespace Util {
 
+inline int toTileIndexFloored(bigint world_position, int tile_size)
+{
+    bigint value = world_position / tile_size;
+    return value.get_si();
+}
+inline int toTileIndexCeilinged(bigint world_position, int tile_size)
+{
+    return toTileIndexFloored(world_position + tile_size - 1, tile_size);
+}
 inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
 {
     Vector2 relative_point = point - virtual_center;
