@@ -11,12 +11,20 @@ void resized(const sf::Event::SizeEvent & size)
 }
 
 
-int main()
+int main(int argc, char ** argv)
 {
+    std::string map = "resources/test.tmx";
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg.find("--map=") == 0) {
+            map = arg.substr(6);
+        }
+    }
+
     main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
     main_window->UseVerticalSync(true);
 
-    Game * game = new Game;
+    Game * game = new Game(map);
 
     while (main_window->IsOpened()) {
         sf::Event event;

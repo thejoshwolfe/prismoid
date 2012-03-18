@@ -9,7 +9,7 @@ class Game
 {
 public:
     int64 frame_counter;
-    Game();
+    Game(std::string filename);
 
     void doFrame(const sf::Input * input);
     void render(sf::RenderTarget * render_target);

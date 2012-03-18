@@ -4,12 +4,12 @@
 
 #include "TiledTmx.h"
 
-Game::Game() :
+Game::Game(std::string filename) :
     frame_counter(0)
 {
     moving_entities.push_back(new PlayerEntity(Vector2(-100, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
 
-    TiledTmx * map = TiledTmx::load("resources/test.tmx");
+    TiledTmx * map = TiledTmx::load(filename);
     for (int y = 0; y < map->height(); y++)
         for (int x = 0; x < map->width(); x++)
             if (map->getTile(x, y))
