@@ -3,14 +3,6 @@
 
 #include "Game.h"
 
-static sf::RenderWindow * main_window;
-
-void resized(const sf::Event::SizeEvent & size)
-{
-    main_window->GetDefaultView().SetHalfSize(size.Width / 2, size.Height / 2);
-}
-
-
 int main(int argc, char ** argv)
 {
     std::string map = "resources/test.tmx";
@@ -21,7 +13,7 @@ int main(int argc, char ** argv)
         }
     }
 
-    main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
+    sf::RenderWindow * main_window = new sf::RenderWindow(sf::VideoMode(800, 600, 32), "grinch");
     main_window->UseVerticalSync(true);
 
     Game * game = new Game(map);
@@ -34,7 +26,7 @@ int main(int argc, char ** argv)
                     main_window->Close();
                     break;
                 case sf::Event::Resized:
-                    resized(event.Size);
+                    main_window->GetDefaultView().SetHalfSize(event.Size.Width / 2, event.Size.Height / 2);
                     break;
                 case sf::Event::KeyPressed: {
                     // check for closing

@@ -21,6 +21,7 @@ public:
 private:
     // important
     std::vector<MovingEntity *> moving_entities;
+    sf::Image tileset_image;
     int tile_size;
     int layer_width;
     int layer_height;

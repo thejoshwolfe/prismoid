@@ -8,16 +8,19 @@ Game::Game(std::string filename) :
     moving_entities.push_back(new PlayerEntity(Vector2(-100, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
 
     TiledTmx * map = TiledTmx::load(filename);
+    Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
     tile_size = map->tileSize();
     layer_width = map->width();
     layer_height = map->height();
     physics_layer = new StaticEntity*[layer_width * layer_height];
     for (int y = 0; y < layer_height; y++) {
         for (int x = 0; x < layer_width; x++) {
-            Tile tile = map->getTile(x, y);
+            Tile tile = map->tile(x, y);
             StaticEntity * entity = NULL;
             if (tile.global_id() != 0)
-                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size), sf::Color::Red, 0, 0);
+                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size),
+                                          tileset_image, map->tilesetImageOffset(tile.global_id()),
+                                          tile.is_flipped_horizontally(), tile.is_flipped_vertically(), tile.is_flipped_diagonally());
             physics_layer[y * layer_width + x] = entity;
         }
     }

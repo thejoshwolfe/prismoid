@@ -38,10 +38,25 @@ void TiledTmx::internalLoad()
     assertEquals(std::atoi(root.attribute("tileheight").value()), tile_size);
     for (pugi::xml_node node = root.first_child(); !node.empty(); node = node.next_sibling()) {
         std::string name = node.name();
+
         if (name == "tileset") {
-            // TODO
+            assertEquals(std::atoi(node.attribute("firstgid").value()), 1);
+            assertEquals(std::atoi(node.attribute("tilewidth").value()), tile_size);
+            assertEquals(std::atoi(node.attribute("tileheight").value()), tile_size);
+
+            pugi::xml_node image_node = node.child("image");
+            int image_width = std::atoi(image_node.attribute("width").value());
+            // if these assertions fail, they'll look really weird
+            assertEquals(image_width != 0, true);
+            assertEquals(image_width % tile_size, 0);
+            tileset_width = image_width / tile_size;
+            std::string relative_source = image_node.attribute("source").value();
+            int index = Util::max<int>(filename.rfind('/'), filename.rfind('\\'));
+            tileset_image_filename = filename.substr(0, index + 1) + relative_source;
+
         } else if (name == "objectgroup") {
             // TODO
+
         } else if (name == "layer") {
             assertEquals(std::atoi(node.attribute("width").value()), map_width);
             assertEquals(std::atoi(node.attribute("height").value()), map_height);
