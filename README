@@ -20,11 +20,10 @@ Not too much is demoable yet. Sorry.
 Builds with eclipse 3.7 and eclipse-cdt 6.0.
 Link dependencies:
 - sfml
-- gmp
 - zlib
 
 Installing dependencies in Ubuntu (tested in 11.10 oneiric):
-    $ sudo apt-get install eclipse-cdt libsfml-dev libgmp-dev
+    $ sudo apt-get install eclipse-cdt libsfml-dev
 
 
 Note about system-dependent include directories:

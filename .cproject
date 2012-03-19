@@ -45,8 +45,6 @@
 <option id="gnu.cpp.link.option.libs.259478925" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 <listOptionValue builtIn="false" value="sfml-graphics"/>
 <listOptionValue builtIn="false" value="sfml-window"/>
-<listOptionValue builtIn="false" value="gmp"/>
-<listOptionValue builtIn="false" value="gmpxx"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.381082017" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

@@ -46,7 +46,7 @@ void Game::doFrame(const sf::Input * input)
 
     // move everything in the right order
     while (!collisions_by_time.empty()) {
-        bigfraction time = collisions_by_time.top().key;
+        float time = collisions_by_time.top().key;
         std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
         collisions_by_time.pop();
         if (collision->valid)
@@ -113,7 +113,7 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
     return ever_added;
 }
 
-bool Game::maybeAddCollision(bigfraction time, MovingEntity *entity, Entity *other, const Vector2 &normal)
+bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const Vector2 &normal)
 {
     // don't count it if we're moving away (which happens right after bouncing)
     // or if we're exactly parallel
@@ -127,7 +127,7 @@ bool Game::maybeAddCollision(bigfraction time, MovingEntity *entity, Entity *oth
     return true;
 }
 
-void Game::doCollision(bigfraction time, std::tr1::shared_ptr<Collision> collision)
+void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
 {
     MovingEntity * entity = collision->entity;
     Entity * other = collision->other;
@@ -149,15 +149,15 @@ void Game::doCollision(bigfraction time, std::tr1::shared_ptr<Collision> collisi
     }
 
     // bounce
-    Vector2q normal = Util::normalized(collision->normal);
-    bigint elasticity = entity->elasticity * other->elasticity;
-    Vector2q relative_velocity = Util::convertVector<bigfraction>(entity->velocity - other->getVelocity());
-    Vector2q normal_component = Util::dot(relative_velocity, normal) * normal;
-    Vector2 tangent_component = Util::convertVector<bigint>(relative_velocity - normal_component);
-    Vector2 normal_force = Util::convertVector<bigint>((bigfraction)(-(1 + elasticity)) * normal_component);
-    bigfraction friction_coefficient = entity->friction * other->friction;
-    bigfraction friction_magnitude = Util::min<bigfraction>(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
-    Vector2 friction_force = Util::convertVector<bigint>((bigfraction)(-friction_magnitude) * Util::normalized(tangent_component));
+    Vector2 normal = Util::normalized(collision->normal);
+    float elasticity = entity->elasticity * other->elasticity;
+    Vector2 relative_velocity = entity->velocity - other->getVelocity();
+    Vector2 normal_component = Util::dot(relative_velocity, normal) * normal;
+    Vector2 tangent_component = relative_velocity - normal_component;
+    Vector2 normal_force = -(1 + elasticity) * normal_component;
+    float friction_coefficient = entity->friction * other->friction;
+    float friction_magnitude = Util::min<float>(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
+    Vector2 friction_force = -friction_magnitude * Util::normalized(tangent_component);
     Vector2 total_force = normal_force + friction_force;
     entity->velocity += total_force;
     if (other->is_moving_entity) {
@@ -188,8 +188,8 @@ void Game::render(sf::RenderTarget *render_target)
     render_target->GetDefaultView().SetCenter(0, 0);
     Vector2 virtual_center = moving_entities[0]->center;
 
-    bigint width_apothem = render_target->GetWidth() / 2;
-    bigint height_apothem = render_target->GetHeight() / 2;
+    float width_apothem = render_target->GetWidth() / 2;
+    float height_apothem = render_target->GetHeight() / 2;
     Rectangle bounding_rectangle(virtual_center.x - width_apothem, virtual_center.y - height_apothem,
                                  virtual_center.x + width_apothem, virtual_center.y + height_apothem);
     std::vector<StaticEntity *> static_entities;
@@ -210,8 +210,8 @@ Rectangle Game::getBoundingRectangle(const Prismoid &prismoid)
     for (int i = 0; i < prismoid.size(); i++) {
         prismoid.getEdge(i, &edge);
         for (int z = 0; z < 2; z++) {
-            bigint x = edge.points[z].x;
-            bigint y = edge.points[z].y;
+            float x = edge.points[z].x;
+            float y = edge.points[z].y;
             min.x = Util::min(min.x, x);
             min.y = Util::min(min.y, y);
             max.x = Util::max(max.x, x);

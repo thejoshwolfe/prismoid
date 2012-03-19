@@ -5,24 +5,9 @@
 #include <cmath>
 #include <limits>
 
-// TODO: turn back on arbitrary precision and make it work.
-#if 0
-    #include <gmpxx.h>
-    typedef mpz_class bigint;
-    typedef mpq_class bigfraction;
-#else
-    typedef float bigint;
-    typedef float bigfraction;
-#endif
-
-typedef sf::Vector2<bigint> Vector2;
-typedef sf::Vector2<bigfraction> Vector2q;
-typedef sf::Vector3<bigfraction> Vector3;
-typedef sf::Rect<bigint> Rectangle;
-
-typedef unsigned char byte;
-typedef int32_t int32;
-typedef int64_t int64;
+typedef sf::Vector2f Vector2;
+typedef sf::Vector3f Vector3;
+typedef sf::FloatRect Rectangle;
 
 struct Edge
 {
@@ -39,12 +24,11 @@ private:
 
 namespace Util {
 
-inline int toTileIndexFloored(bigint world_position, int tile_size)
+inline int toTileIndexFloored(float world_position, int tile_size)
 {
-    bigint value = world_position / tile_size;
-    return value;
+    return std::floor(world_position / tile_size);
 }
-inline int toTileIndexCeilinged(bigint world_position, int tile_size)
+inline int toTileIndexCeilinged(float world_position, int tile_size)
 {
     return toTileIndexFloored(world_position + tile_size - 1, tile_size);
 }
@@ -67,23 +51,17 @@ inline int euclideanMod(int numerator, int denominator)
     return (numerator % denominator + denominator) % denominator;
 }
 
-inline bigint magnitude(Vector2 vector)
+inline float magnitude(Vector2 vector)
 {
     return sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
-inline Vector2q normalized(Vector2 vector)
+inline Vector2 normalized(Vector2 vector)
 {
-    bigint _magnitude = magnitude(vector);
+    float _magnitude = magnitude(vector);
     if (_magnitude == 0)
-        return Vector2q();
-    return Vector2q(vector.x / _magnitude,
-                    vector.y / _magnitude);
-}
-template<typename To, typename From>
-sf::Vector2<To> convertVector(sf::Vector2<From> vector)
-{
-    return sf::Vector2<To>(vector.x, vector.y);
+        return Vector2();
+    return vector / _magnitude;
 }
 
 template<typename T>
@@ -105,7 +83,7 @@ sf::Vector3<T> cross(const sf::Vector3<T> &a, const sf::Vector3<T> &b)
                           a.x * b.y - a.y * b.x);
 }
 
-inline Vector2 scaleVector(bigfraction factor, const Vector2 &vector)
+inline Vector2 scaleVector(float factor, const Vector2 &vector)
 {
     Vector2 result = vector;
     result.x *= factor;
@@ -120,18 +98,18 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     Vector3 edge_vector = edge.points[1] - edge_point;
     Vector3 plane_point = plane_edge1.points[0];
     Vector3 plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
-    bigfraction numerator = dot(plane_point - edge_point, plane_vector);
+    float numerator = dot(plane_point - edge_point, plane_vector);
     Vector3 intersection_point;
     if (numerator == 0) {
         // intersects immediately
         intersection_point = edge_point;
     } else {
-        bigfraction denominator = dot(edge_vector, plane_vector);
+        float denominator = dot(edge_vector, plane_vector);
         if (denominator == 0) {
             // parallel and not intersecting
             return false;
         }
-        bigfraction percent_to_intersection = numerator / denominator;
+        float percent_to_intersection = numerator / denominator;
         // check the bounds of the edge
         if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
             return false;

@@ -11,10 +11,10 @@
 class Prismoid
 {
 private:
-    bigfraction z[2];
+    float z[2];
     std::vector<Vector2> bases[2];
 public:
-    void setZ(bigfraction z1, bigfraction z2)
+    void setZ(float z1, float z2)
     {
         z[0] = z1;
         z[1] = z2;
