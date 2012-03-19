@@ -4,7 +4,7 @@
 
 Game::Game(std::string filename)
 {
-    moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 30)));
+    moving_entities.push_back(new PlayerEntity(Vector2(100, -50)));
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -166,7 +166,7 @@ void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
     Vector2 tangent_component = relative_velocity - normal_component;
     Vector2 normal_force = -(1 + elasticity) * normal_component;
     float friction_coefficient = entity->friction * other->friction;
-    float friction_magnitude = Util::min<float>(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
+    float friction_magnitude = Util::min(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
     Vector2 friction_force = -friction_magnitude * Util::normalized(tangent_component);
     Vector2 total_force = normal_force + friction_force;
     entity->velocity += total_force;
