@@ -8,7 +8,7 @@ class StaticEntity : public Entity
 private:
     sf::Sprite sprite;
 public:
-    StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Image &image, const sf::IntRect &image_offset,
+    StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Image &image,
             bool flip_horizontal, bool flip_vertical, bool flip_diagonally) :
         Entity(false, center, size, sf::Color(), 0.5, 0.5)
     {
@@ -19,8 +19,7 @@ public:
             bounding_prismoid.addEdge(here[i], here[i]);
 
         sprite.SetImage(image);
-        sprite.SetSubRect(image_offset);
-        sprite.SetCenter(image_offset.GetWidth() / 2, image_offset.GetHeight() / 2);
+        sprite.SetCenter(image.GetWidth() / 2, image.GetHeight() / 2);
         if (flip_diagonally) {
             sprite.SetRotation(-90);
             flip_horizontal = !flip_horizontal;

@@ -16,10 +16,20 @@ Game::Game(std::string filename)
         for (int x = 0; x < layer_width; x++) {
             Tile tile = map->tile(x, y);
             StaticEntity * entity = NULL;
-            if (tile.global_id() != 0)
+            if (tile.global_id() != 0) {
+                // we have to create subimages manually. see https://github.com/thejoshwolfe/grinch/issues/2
+                sf::IntRect sub_rect = map->tilesetImageOffset(tile.global_id());
+                sf::Image* image;
+                if (tileset_images.count(sub_rect)) {
+                    image = tileset_images[sub_rect];
+                } else {
+                    image = new sf::Image(sub_rect.GetWidth(), sub_rect.GetHeight());
+                    image->Copy(tileset_image, 0, 0, sub_rect);
+                    tileset_images[sub_rect] = image;
+                }
                 entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size),
-                                          tileset_image, map->tilesetImageOffset(tile.global_id()),
-                                          tile.is_flipped_horizontally(), tile.is_flipped_vertically(), tile.is_flipped_diagonally());
+                                          *image, tile.is_flipped_horizontally(), tile.is_flipped_vertically(), tile.is_flipped_diagonally());
+            }
             physics_layer[y * layer_width + x] = entity;
         }
     }

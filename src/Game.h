@@ -21,6 +21,7 @@ private:
     // important
     std::vector<MovingEntity *> moving_entities;
     sf::Image tileset_image;
+    std::map<IntRectWithCompareOperator, sf::Image*> tileset_images;
     int tile_size;
     int layer_width;
     int layer_height;

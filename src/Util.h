@@ -22,6 +22,20 @@ private:
     Edge(const Edge &) {} // non-copyable
 };
 
+struct IntRectWithCompareOperator : public sf::IntRect
+{
+    IntRectWithCompareOperator() {}
+    IntRectWithCompareOperator(const sf::IntRect &copy) : sf::IntRect(copy) {}
+    bool operator<(const IntRectWithCompareOperator & other) const
+    {
+        if (this->Left != other.Left) return this->Left < other.Left;
+        if (this->Top != other.Top) return this->Top < other.Top;
+        if (this->Right != other.Right) return this->Right < other.Right;
+        if (this->Bottom != other.Bottom) return this->Bottom < other.Bottom;
+        return false;
+    }
+};
+
 namespace Util {
 
 inline int toTileIndexFloored(float world_position, int tile_size)
@@ -35,7 +49,9 @@ inline int toTileIndexCeilinged(float world_position, int tile_size)
 inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
 {
     Vector2 relative_point = point - virtual_center;
-    return sf::Vector2f(relative_point.x, relative_point.y);
+    // snap to integers to avoid gaps between sprites
+    return sf::Vector2f(std::floor(relative_point.x + 0.5),
+                        std::floor(relative_point.y + 0.5));
 }
 
 inline float euclideanMod(float numerator, float denominator)
