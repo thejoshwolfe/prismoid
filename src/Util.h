@@ -5,9 +5,16 @@
 #include <cmath>
 #include <limits>
 
-#include <gmpxx.h>
-typedef mpz_class bigint;
-typedef mpq_class bigfraction;
+// TODO: turn back on arbitrary precision and make it work.
+#if 0
+    #include <gmpxx.h>
+    typedef mpz_class bigint;
+    typedef mpq_class bigfraction;
+#else
+    typedef float bigint;
+    typedef float bigfraction;
+#endif
+
 typedef sf::Vector2<bigint> Vector2;
 typedef sf::Vector2<bigfraction> Vector2q;
 typedef sf::Vector3<bigfraction> Vector3;
@@ -35,7 +42,7 @@ namespace Util {
 inline int toTileIndexFloored(bigint world_position, int tile_size)
 {
     bigint value = world_position / tile_size;
-    return value.get_si();
+    return value;
 }
 inline int toTileIndexCeilinged(bigint world_position, int tile_size)
 {
@@ -44,7 +51,7 @@ inline int toTileIndexCeilinged(bigint world_position, int tile_size)
 inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
 {
     Vector2 relative_point = point - virtual_center;
-    return sf::Vector2f(relative_point.x.get_d(), relative_point.y.get_d());
+    return sf::Vector2f(relative_point.x, relative_point.y);
 }
 
 inline float euclideanMod(float numerator, float denominator)

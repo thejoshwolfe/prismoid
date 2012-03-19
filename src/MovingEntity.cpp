@@ -5,7 +5,7 @@
 
 void MovingEntity::render(Vector2 virtual_center, sf::RenderTarget *render_target)
 {
-    if (true) {
+    if (false) {
         // draw motion bounding polygon
         sf::Shape shape;
         for (int i = 0; i < bounding_prismoid.size(); i++) {

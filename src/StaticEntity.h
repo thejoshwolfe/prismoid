@@ -10,7 +10,7 @@ private:
 public:
     StaticEntity(const Vector2 & center, const Vector2 & size, const sf::Image &image, const sf::IntRect &image_offset,
             bool flip_horizontal, bool flip_vertical, bool flip_diagonally) :
-        Entity(false, center, size, sf::Color(), 0, 0)
+        Entity(false, center, size, sf::Color(), 0.5, 0.5)
     {
         bounding_prismoid.setZ(0, 1);
         std::vector<Vector2> here;
