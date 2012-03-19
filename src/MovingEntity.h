@@ -12,8 +12,8 @@ public:
         EntityType_MovingEntity,
         EntityType_PlayerEntity,
     };
-    MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, bigint elasticity, bigint friction, const Vector2 & velocity) :
-        Entity(true, center, size, color, elasticity, friction), velocity(velocity) {}
+    MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color) :
+        Entity(true, center, size, color, 0.5, 1.25) {}
 
     virtual EntityType getType() { return EntityType_MovingEntity; }
 

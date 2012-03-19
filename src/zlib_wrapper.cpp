@@ -3,8 +3,6 @@
 
 #include <cstring>
 #include <stdexcept>
-#include <iostream>
-#include <iomanip>
 #include <sstream>
 #include <zlib.h>
 

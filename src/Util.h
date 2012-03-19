@@ -7,8 +7,10 @@
 
 #include <gmpxx.h>
 typedef mpz_class bigint;
+typedef mpq_class bigfraction;
 typedef sf::Vector2<bigint> Vector2;
-typedef sf::Vector3<bigint> Vector3;
+typedef sf::Vector2<bigfraction> Vector2q;
+typedef sf::Vector3<bigfraction> Vector3;
 typedef sf::Rect<bigint> Rectangle;
 
 typedef unsigned char byte;
@@ -63,10 +65,18 @@ inline bigint magnitude(Vector2 vector)
     return sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
-inline Vector2 normalized(Vector2 vector)
+inline Vector2q normalized(Vector2 vector)
 {
     bigint _magnitude = magnitude(vector);
-    return _magnitude == 0 ? Vector2(0, 0) : vector / _magnitude;
+    if (_magnitude == 0)
+        return Vector2q();
+    return Vector2q(vector.x / _magnitude,
+                    vector.y / _magnitude);
+}
+template<typename To, typename From>
+sf::Vector2<To> convertVector(sf::Vector2<From> vector)
+{
+    return sf::Vector2<To>(vector.x, vector.y);
 }
 
 template<typename T>
@@ -88,6 +98,14 @@ sf::Vector3<T> cross(const sf::Vector3<T> &a, const sf::Vector3<T> &b)
                           a.x * b.y - a.y * b.x);
 }
 
+inline Vector2 scaleVector(bigfraction factor, const Vector2 &vector)
+{
+    Vector2 result = vector;
+    result.x *= factor;
+    result.y *= factor;
+    return result;
+}
+
 inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
 {
     // http://en.wikipedia.org/wiki/Line-plane_intersection
@@ -95,18 +113,18 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     Vector3 edge_vector = edge.points[1] - edge_point;
     Vector3 plane_point = plane_edge1.points[0];
     Vector3 plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
-    bigint numerator = dot(plane_point - edge_point, plane_vector);
+    bigfraction numerator = dot(plane_point - edge_point, plane_vector);
     Vector3 intersection_point;
     if (numerator == 0) {
         // intersects immediately
         intersection_point = edge_point;
     } else {
-        bigint denominator = dot(edge_vector, plane_vector);
+        bigfraction denominator = dot(edge_vector, plane_vector);
         if (denominator == 0) {
             // parallel and not intersecting
             return false;
         }
-        bigint percent_to_intersection = numerator / denominator;
+        bigfraction percent_to_intersection = numerator / denominator;
         // check the bounds of the edge
         if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
             return false;
@@ -114,7 +132,12 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
     }
 
     // check the bounds of the face
-    Vector3 plane_points[] = { plane_edge1.points[0], plane_edge1.points[1], plane_edge2.points[1], plane_edge2.points[0], };
+    Vector3 plane_points[] = {
+            plane_edge1.points[0],
+            plane_edge1.points[1],
+            plane_edge2.points[1],
+            plane_edge2.points[0],
+    };
     const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
     for (int i = 0; i < plane_points_count; i++) {
         Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];

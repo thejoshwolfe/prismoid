@@ -3,6 +3,15 @@
 
 #include "Game.h"
 
+// non-inline functions for debugger evaluation
+const char * s(bigint x) { return x.get_str().c_str();}
+const char * s(bigfraction x) { return x.get_str().c_str();}
+const char * s(Vector2 v) { return ("(" + v.x.get_str() + "," + v.y.get_str() + ")").c_str(); }
+const char * s(Vector2q v) { return ("(" + v.x.get_str() + "," + v.y.get_str() + ")").c_str(); }
+const char * s(Vector3 v) { return ("(" + v.x.get_str() + "," + v.y.get_str() + "," + v.z.get_str() + ")").c_str(); }
+const char * s(Edge e) { return ("((" + e.points[0].x.get_str() + "," + e.points[0].y.get_str() + "," + e.points[0].z.get_str() + "), " +
+                                  "(" + e.points[1].x.get_str() + "," + e.points[1].y.get_str() + "," + e.points[1].z.get_str() + "))").c_str(); }
+
 int main(int argc, char ** argv)
 {
     std::string map = "resources/test.tmx";

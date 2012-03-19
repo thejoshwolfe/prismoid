@@ -10,7 +10,6 @@
 class Game
 {
 public:
-    int64 frame_counter;
     Game(std::string filename);
 
     void doFrame(const sf::Input * input);
@@ -39,12 +38,12 @@ private:
             valid(true), entity(entity), other(other), normal(normal) {}
     };
     std::multimap<Entity *, std::tr1::shared_ptr<Collision> > collisions_by_entity;
-    std::priority_queue<Util::KeyAndValue<bigint, std::tr1::shared_ptr<Collision> > > collisions_by_time;
+    std::priority_queue<Util::KeyAndValue<bigfraction, std::tr1::shared_ptr<Collision> > > collisions_by_time;
 
     void detectCollisions(MovingEntity * entity);
     bool detectCollision(MovingEntity * entity, Entity * other);
-    bool maybeAddCollision(bigint time, MovingEntity * entity, Entity * other, const Vector2 &normal);
-    void doCollision(bigint time, std::tr1::shared_ptr<Collision> collision);
+    bool maybeAddCollision(bigfraction time, MovingEntity * entity, Entity * other, const Vector2 &normal);
+    void doCollision(bigfraction time, std::tr1::shared_ptr<Collision> collision);
     void invalidateCollisions(MovingEntity *entity);
 
     Rectangle getBoundingRectangle(const Prismoid &prismoid);

@@ -2,10 +2,9 @@
 
 #include "PlayerEntity.h"
 
-Game::Game(std::string filename) :
-    frame_counter(0)
+Game::Game(std::string filename)
 {
-    moving_entities.push_back(new PlayerEntity(Vector2(-100, 0), Vector2(30, 30), sf::Color::Blue, 0.5, 1.25, Vector2(0, 0)));
+    moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 30)));
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -29,8 +28,6 @@ Game::Game(std::string filename) :
 
 void Game::doFrame(const sf::Input * input)
 {
-    frame_counter++;
-
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->frame_progress = 0;
 
@@ -49,7 +46,7 @@ void Game::doFrame(const sf::Input * input)
 
     // move everything in the right order
     while (!collisions_by_time.empty()) {
-        bigint time = collisions_by_time.top().key;
+        bigfraction time = collisions_by_time.top().key;
         std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
         collisions_by_time.pop();
         if (collision->valid)
@@ -62,7 +59,7 @@ void Game::detectCollisions(MovingEntity * entity)
 {
     bool ever_added = false;
 
-    // only check for static entities in the tiles we'll be intersecting with.
+    // only check static entities in the tiles we'll be intersecting.
     Rectangle bounding_rectangle = getBoundingRectangle(entity->bounding_prismoid);
     std::vector<StaticEntity *> static_entities;
     getStaticEntities(static_entities, bounding_rectangle);
@@ -116,7 +113,7 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
     return ever_added;
 }
 
-bool Game::maybeAddCollision(bigint time, MovingEntity *entity, Entity *other, const Vector2 &normal)
+bool Game::maybeAddCollision(bigfraction time, MovingEntity *entity, Entity *other, const Vector2 &normal)
 {
     // don't count it if we're moving away (which happens right after bouncing)
     // or if we're exactly parallel
@@ -130,13 +127,13 @@ bool Game::maybeAddCollision(bigint time, MovingEntity *entity, Entity *other, c
     return true;
 }
 
-void Game::doCollision(bigint time, std::tr1::shared_ptr<Collision> collision)
+void Game::doCollision(bigfraction time, std::tr1::shared_ptr<Collision> collision)
 {
     MovingEntity * entity = collision->entity;
     Entity * other = collision->other;
 
     // snap to the collision point
-    entity->center += (bigint)(time - entity->frame_progress) * entity->velocity;
+    entity->center += Util::scaleVector(time - entity->frame_progress, entity->velocity);
     entity->frame_progress = time;
 
     if (other == NULL) {
@@ -147,20 +144,20 @@ void Game::doCollision(bigint time, std::tr1::shared_ptr<Collision> collision)
     if (other->is_moving_entity) {
         // snap the other to the collition point
         MovingEntity * other_moving_entity = static_cast<MovingEntity*>(other);
-        other_moving_entity->center += (bigint)(time - other_moving_entity->frame_progress) * other_moving_entity->velocity;
+        other_moving_entity->center += Util::scaleVector(time - other_moving_entity->frame_progress, other_moving_entity->velocity);
         other_moving_entity->frame_progress = time;
     }
 
     // bounce
-    Vector2 normal = Util::normalized(collision->normal);
+    Vector2q normal = Util::normalized(collision->normal);
     bigint elasticity = entity->elasticity * other->elasticity;
-    Vector2 relative_velocity = entity->velocity - other->getVelocity();
-    Vector2 normal_component = Util::dot(relative_velocity, normal) * normal;
-    Vector2 tangent_component = relative_velocity - normal_component;
-    Vector2 normal_force = (bigint)(-(1 + elasticity)) * normal_component;
-    bigint friction_coefficient = entity->friction * other->friction;
-    bigint friction_magnitude = Util::min((bigint)(friction_coefficient * Util::magnitude(normal_force)), Util::magnitude(tangent_component));
-    Vector2 friction_force = (bigint)(-friction_magnitude) * Util::normalized(tangent_component);
+    Vector2q relative_velocity = Util::convertVector<bigfraction>(entity->velocity - other->getVelocity());
+    Vector2q normal_component = Util::dot(relative_velocity, normal) * normal;
+    Vector2 tangent_component = Util::convertVector<bigint>(relative_velocity - normal_component);
+    Vector2 normal_force = Util::convertVector<bigint>((bigfraction)(-(1 + elasticity)) * normal_component);
+    bigfraction friction_coefficient = entity->friction * other->friction;
+    bigfraction friction_magnitude = Util::min<bigfraction>(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
+    Vector2 friction_force = Util::convertVector<bigint>((bigfraction)(-friction_magnitude) * Util::normalized(tangent_component));
     Vector2 total_force = normal_force + friction_force;
     entity->velocity += total_force;
     if (other->is_moving_entity) {

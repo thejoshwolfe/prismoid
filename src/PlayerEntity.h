@@ -6,8 +6,8 @@
 class PlayerEntity : public MovingEntity
 {
 public:
-    PlayerEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, bigint elasticity, bigint friction, const Vector2 & velocity) :
-        MovingEntity(center, size, color, elasticity, friction, velocity) {}
+    PlayerEntity(const Vector2 & center, const Vector2 & size) :
+        MovingEntity(center, size, sf::Color::Blue) {}
 
     virtual EntityType getType() { return EntityType_PlayerEntity; }
 

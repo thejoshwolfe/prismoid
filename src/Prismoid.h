@@ -11,10 +11,10 @@
 class Prismoid
 {
 private:
-    bigint z[2];
+    bigfraction z[2];
     std::vector<Vector2> bases[2];
 public:
-    void setZ(bigint z1, bigint z2)
+    void setZ(bigfraction z1, bigfraction z2)
     {
         z[0] = z1;
         z[1] = z2;
@@ -40,8 +40,11 @@ public:
         getEdge(i, edge1);
         getEdge((i + 1) % size(), edge2);
     }
-    Vector2 getNormal(int i);
-
+    Vector2 getNormal(int i)
+    {
+        // assumes clockwise, or something
+        return Util::perp(bases[0][(i + 1) % size()] - bases[0][i]);
+    }
 };
 
 #endif // PRISMOID_H

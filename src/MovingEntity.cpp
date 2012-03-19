@@ -5,7 +5,7 @@
 
 void MovingEntity::render(Vector2 virtual_center, sf::RenderTarget *render_target)
 {
-    if (false) {
+    if (true) {
         // draw motion bounding polygon
         sf::Shape shape;
         for (int i = 0; i < bounding_prismoid.size(); i++) {
@@ -21,12 +21,15 @@ void MovingEntity::render(Vector2 virtual_center, sf::RenderTarget *render_targe
 
 void MovingEntity::doController(Game *)
 {
-    velocity.y += 0.4f;
+    // gravity
+    velocity.y += 1;
 }
 
 void MovingEntity::calculateBoundingPrismoid()
 {
-    Vector2 remaining_velocity = (bigint)(1 - frame_progress) * velocity;
+    if (frame_progress != 0)
+        Util::assert(true, "");
+    Vector2 remaining_velocity = Util::scaleVector(1 - frame_progress, velocity);
     std::vector<Vector2> here;
     makeRectangle(&here, center, size);
 
