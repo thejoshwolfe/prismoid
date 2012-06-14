@@ -4,7 +4,8 @@
 
 Game::Game(std::string filename)
 {
-    moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 84), Vector2(0, 0)));
+    // moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 84), Vector2(0, 0)));
+    moving_entities.push_back(new PlayerEntity(Vector2(32+16, 16), Vector2(32, 32), Vector2(0, -1)));
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -290,8 +291,11 @@ Rectangle Game::getBoundingRectangle(const Prismoid &prismoid)
 
 void Game::getStaticEntities(std::vector<StaticEntity *> &static_entities, const Rectangle &bounding_rectangle)
 {
-    int min_x = Util::toTileIndexFloored(bounding_rectangle.Left, tile_size);
-    int min_y = Util::toTileIndexFloored(bounding_rectangle.Top, tile_size);
+    // when considering the exact edge between two tiles, grab both tiles.
+    // for example, if the bounding rectangle is [0,0,0,0],
+    // return all 4 tiles that touch that point: [-1,-1]->[0,0]
+    int min_x = Util::toTileIndexCeilinged(bounding_rectangle.Left, tile_size) - 1;
+    int min_y = Util::toTileIndexCeilinged(bounding_rectangle.Top, tile_size) - 1;
     int max_x = Util::toTileIndexCeilinged(bounding_rectangle.Right, tile_size);
     int max_y = Util::toTileIndexCeilinged(bounding_rectangle.Bottom, tile_size);
 

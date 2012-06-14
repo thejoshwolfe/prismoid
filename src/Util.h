@@ -38,13 +38,9 @@ struct IntRectWithCompareOperator : public sf::IntRect
 
 namespace Util {
 
-inline int toTileIndexFloored(float world_position, int tile_size)
-{
-    return std::floor(world_position / tile_size);
-}
 inline int toTileIndexCeilinged(float world_position, int tile_size)
 {
-    return toTileIndexFloored(world_position + tile_size - 1, tile_size);
+    return std::ceil(world_position / tile_size);
 }
 inline sf::Vector2f toRenderPoint(Vector2 virtual_center, Vector2 point)
 {
