@@ -4,8 +4,7 @@
 
 Game::Game(std::string filename)
 {
-    PlayerEntity * player = new PlayerEntity(Vector2(100, -50));
-    moving_entities.push_back(player);
+    moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 84), Vector2(0, 0)));
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -58,6 +57,7 @@ void Game::doFrame(const sf::Input * input)
     // move everything in the right order
     while (!collisions_by_time.empty()) {
         float time = collisions_by_time.top().key;
+        // resolve all the collisions at the first interesting instant simultaneously.
         std::vector<std::tr1::shared_ptr<Collision> > collisions;
         while (!collisions_by_time.empty() && collisions_by_time.top().key == time) {
             std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
@@ -66,7 +66,7 @@ void Game::doFrame(const sf::Input * input)
             collisions_by_time.pop();
         }
         if (!collisions.empty())
-            doCollision(time, collisions);
+            doCollisions(time, collisions);
     }
     collisions_by_entity.clear();
 }
@@ -97,36 +97,32 @@ void Game::detectCollisions(MovingEntity * entity)
 bool Game::detectCollision(MovingEntity *entity, Entity *other)
 {
     bool ever_added = false;
-    for (int i = 0; i < other->bounding_prismoid.size(); i++) {
-        Edge other_edge1, other_edge2;
-        other->bounding_prismoid.getFace(i, &other_edge1, &other_edge2);
-        for (int j = 0; j < entity->bounding_prismoid.size(); j++) {
-            Edge this_edge;
-            entity->bounding_prismoid.getEdge(j, &this_edge);
-            Vector3 collision_point;
-            bool is_collision = getEdgeIntersectionWithQuadrilateral(this_edge, other_edge1, other_edge2, &collision_point);
-            if (!is_collision)
-                continue;
-            Vector2 normal = other->bounding_prismoid.getNormal(i);
-            Vector2 this_adjacent_edge1, this_adjacent_edge2;
-            entity->bounding_prismoid.getAdjacentCapEdgeVectors(j, &this_adjacent_edge1, &this_adjacent_edge2);
-            ever_added |= maybeAddCollision(collision_point.z, entity, other, normal, this_adjacent_edge1, this_adjacent_edge2);
-        }
-    }
-    for (int i = 0; i < entity->bounding_prismoid.size(); i++) {
-        Edge this_edge1, this_edge2;
-        entity->bounding_prismoid.getFace(i, &this_edge1, &this_edge2);
-        for (int j = 0; j < other->bounding_prismoid.size(); j++) {
-            Edge other_edge;
-            other->bounding_prismoid.getEdge(j, &other_edge);
-            Vector3 collision_point;
-            bool is_collision = getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
-            if (!is_collision)
-                continue;
-            Vector2 normal = entity->bounding_prismoid.getNormal(i);
-            Vector2 other_adjacent_edge1, other_adjacent_edge2;
-            other->bounding_prismoid.getAdjacentCapEdgeVectors(j, &other_adjacent_edge1, &other_adjacent_edge2);
-            ever_added |= maybeAddCollision(collision_point.z, entity, other, -normal, -other_adjacent_edge1, -other_adjacent_edge2);
+    Entity* entities[] = { entity, other, };
+    for (int e = 0; e < 2; e++) {
+        Entity * edge_entity = entities[e];
+        Entity * face_entity = entities[1 - e];
+        for (int i = 0; i < face_entity->bounding_prismoid.size(); i++) {
+            Edge face_edge1, face_edge2;
+            face_entity->bounding_prismoid.getFace(i, &face_edge1, &face_edge2);
+            for (int j = 0; j < edge_entity->bounding_prismoid.size(); j++) {
+                Edge edge;
+                edge_entity->bounding_prismoid.getEdge(j, &edge);
+                Vector3 collision_point;
+                bool is_collision = getEdgeIntersectionWithQuadrilateral(edge, face_edge1, face_edge2, &collision_point);
+                if (!is_collision)
+                    continue;
+                Vector2 normal = face_entity->bounding_prismoid.getNormal(i);
+                Vector2 adjacent_edge1, adjacent_edge2;
+                edge_entity->bounding_prismoid.getAdjacentCapEdgeVectors(j, &adjacent_edge1, &adjacent_edge2);
+                if (entity == face_entity) {
+                    // if the collision is on our own face, point the normals back in toward us.
+                    normal = -normal;
+                    adjacent_edge1 = -adjacent_edge1;
+                    adjacent_edge2 = -adjacent_edge2;
+                }
+                if (maybeAddCollision(collision_point.z, entity, other, normal, adjacent_edge1, adjacent_edge2))
+                    ever_added = true;
+            }
         }
     }
     return ever_added;
@@ -200,7 +196,7 @@ bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, co
     return true;
 }
 
-void Game::doCollision(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
+void Game::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
 {
     std::tr1::shared_ptr<Collision> collision = collisions[0];
     MovingEntity * entity = collision->entity;
