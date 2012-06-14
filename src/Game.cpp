@@ -4,7 +4,8 @@
 
 Game::Game(std::string filename)
 {
-    moving_entities.push_back(new PlayerEntity(Vector2(100, -50)));
+    PlayerEntity * player = new PlayerEntity(Vector2(100, -50));
+    moving_entities.push_back(player);
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -27,8 +28,8 @@ Game::Game(std::string filename)
                     image->Copy(tileset_image, 0, 0, sub_rect);
                     tileset_images[sub_rect] = image;
                 }
-                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size),
-                                          *image, tile.is_flipped_horizontally(), tile.is_flipped_vertically(), tile.is_flipped_diagonally());
+                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size), *image, tile.is_flipped_horizontally(),
+                        tile.is_flipped_vertically(), tile.is_flipped_diagonally());
             }
             physics_layer[y * layer_width + x] = entity;
         }
@@ -57,10 +58,15 @@ void Game::doFrame(const sf::Input * input)
     // move everything in the right order
     while (!collisions_by_time.empty()) {
         float time = collisions_by_time.top().key;
-        std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
-        collisions_by_time.pop();
-        if (collision->valid)
-            doCollision(time, collision);
+        std::vector<std::tr1::shared_ptr<Collision> > collisions;
+        while (!collisions_by_time.empty() && collisions_by_time.top().key == time) {
+            std::tr1::shared_ptr<Collision> collision = collisions_by_time.top().value;
+            if (collision->valid)
+                collisions.push_back(collision);
+            collisions_by_time.pop();
+        }
+        if (!collisions.empty())
+            doCollision(time, collisions);
     }
     collisions_by_entity.clear();
 }
@@ -84,8 +90,7 @@ void Game::detectCollisions(MovingEntity * entity)
     }
     if (!ever_added) {
         // add a fake collision so that the entity will be updated at all
-        Vector2 dummy_normal;
-        maybeAddCollision(1, entity, NULL, dummy_normal);
+        maybeAddCollision(1, entity, NULL, Vector2(), Vector2(), Vector2());
     }
 }
 
@@ -103,7 +108,9 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
             if (!is_collision)
                 continue;
             Vector2 normal = other->bounding_prismoid.getNormal(i);
-            ever_added |= maybeAddCollision(collision_point.z, entity, other, normal);
+            Vector2 this_adjacent_edge1, this_adjacent_edge2;
+            entity->bounding_prismoid.getAdjacentCapEdgeVectors(j, &this_adjacent_edge1, &this_adjacent_edge2);
+            ever_added |= maybeAddCollision(collision_point.z, entity, other, normal, this_adjacent_edge1, this_adjacent_edge2);
         }
     }
     for (int i = 0; i < entity->bounding_prismoid.size(); i++) {
@@ -116,29 +123,39 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
             bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
             if (!is_collision)
                 continue;
-            Vector2 normal = -entity->bounding_prismoid.getNormal(i);
-            ever_added |= maybeAddCollision(collision_point.z, entity, other, normal);
+            Vector2 normal = entity->bounding_prismoid.getNormal(i);
+            Vector2 other_adjacent_edge1, other_adjacent_edge2;
+            other->bounding_prismoid.getAdjacentCapEdgeVectors(j, &other_adjacent_edge1, &other_adjacent_edge2);
+            ever_added |= maybeAddCollision(collision_point.z, entity, other, -normal, -other_adjacent_edge1, -other_adjacent_edge2);
         }
     }
     return ever_added;
 }
 
-bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const Vector2 &normal)
+bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2)
 {
     // don't count it if we're moving away (which happens right after bouncing)
     // or if we're exactly parallel
     if (other != NULL && Util::dot(entity->velocity - other->getVelocity(), normal) >= 0)
         return false;
-    std::tr1::shared_ptr<Collision> collision(new Collision(entity, other, normal));
+    // don't count it if the normal is impossible to reach this vertex.
+    // this happens when the back corner scrapes by the backward-facing vertex of a floor tile.
+    float normal_angle_limit = Util::dot(Util::normalized(adjacent_edge1), Util::normalized(adjacent_edge2));
+    if (Util::dot(Util::normalized(normal), Util::normalized(adjacent_edge1)) < normal_angle_limit)
+        return false;
+    if (Util::dot(Util::normalized(normal), Util::normalized(adjacent_edge2)) < normal_angle_limit)
+        return false;
+    std::tr1::shared_ptr<Collision> collision(new Collision(entity, other, time, normal));
     Util::push(&collisions_by_time, time, collision);
-    Util::insert(&collisions_by_entity, static_cast<Entity*>(entity), collision);
+    Util::insert(&collisions_by_entity, static_cast<Entity*> (entity), collision);
     if (other != NULL && other->is_moving_entity)
         Util::insert(&collisions_by_entity, other, collision);
     return true;
 }
 
-void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
+void Game::doCollision(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
 {
+    std::tr1::shared_ptr<Collision> collision = collisions[0];
     MovingEntity * entity = collision->entity;
     Entity * other = collision->other;
 
@@ -152,39 +169,35 @@ void Game::doCollision(float time, std::tr1::shared_ptr<Collision> collision)
     }
 
     if (other->is_moving_entity) {
-        // snap the other to the collition point
-        MovingEntity * other_moving_entity = static_cast<MovingEntity*>(other);
+        // snap the other to the collision point
+        MovingEntity * other_moving_entity = static_cast<MovingEntity*> (other);
         other_moving_entity->center += Util::scaleVector(time - other_moving_entity->frame_progress, other_moving_entity->velocity);
         other_moving_entity->frame_progress = time;
     }
 
     // bounce
     Vector2 normal = Util::normalized(collision->normal);
-    float elasticity = entity->elasticity * other->elasticity;
     Vector2 relative_velocity = entity->velocity - other->getVelocity();
     Vector2 normal_component = Util::dot(relative_velocity, normal) * normal;
-    Vector2 tangent_component = relative_velocity - normal_component;
-    Vector2 normal_force = -(1 + elasticity) * normal_component;
-    float friction_coefficient = entity->friction * other->friction;
-    float friction_magnitude = Util::min(friction_coefficient * Util::magnitude(normal_force), Util::magnitude(tangent_component));
-    Vector2 friction_force = -friction_magnitude * Util::normalized(tangent_component);
-    Vector2 total_force = normal_force + friction_force;
+    Vector2 normal_force = -normal_component;
+    Vector2 total_force = normal_force;
     entity->velocity += total_force;
     if (other->is_moving_entity) {
         // Newton's 3rd
-        static_cast<MovingEntity*>(other)->velocity -= total_force;
+        static_cast<MovingEntity*> (other)->velocity -= total_force;
     }
 
     // recalculate collisions for these entities
     invalidateCollisions(entity);
     if (other->is_moving_entity)
-        invalidateCollisions(static_cast<MovingEntity*>(other));
+        invalidateCollisions(static_cast<MovingEntity*> (other));
 }
 
 void Game::invalidateCollisions(MovingEntity *entity)
 {
     // mark any other collisions invalid
-    std::pair<std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator> range = collisions_by_entity.equal_range(entity);
+    std::pair<std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator> range =
+            collisions_by_entity.equal_range(entity);
     for (std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator iterator = range.first; iterator != range.second; iterator++)
         iterator->second->valid = false;
     collisions_by_entity.erase(range.first, range.second);
@@ -200,8 +213,9 @@ void Game::render(sf::RenderTarget *render_target)
 
     float width_apothem = render_target->GetWidth() / 2;
     float height_apothem = render_target->GetHeight() / 2;
-    Rectangle bounding_rectangle(virtual_center.x - width_apothem, virtual_center.y - height_apothem,
-                                 virtual_center.x + width_apothem, virtual_center.y + height_apothem);
+    Rectangle bounding_rectangle( //
+            virtual_center.x - width_apothem, virtual_center.y - height_apothem, //
+            virtual_center.x + width_apothem, virtual_center.y + height_apothem);
     std::vector<StaticEntity *> static_entities;
     getStaticEntities(static_entities, bounding_rectangle);
     for (int i = 0; i < (int)static_entities.size(); i++)

@@ -13,7 +13,7 @@ public:
         EntityType_PlayerEntity,
     };
     MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color) :
-        Entity(true, center, size, color, 0.1, 1.25) {}
+        Entity(true, center, size, color) {}
 
     virtual EntityType getType() { return EntityType_MovingEntity; }
 

@@ -22,7 +22,7 @@ void MovingEntity::render(Vector2 virtual_center, sf::RenderTarget *render_targe
 void MovingEntity::doController(Game *)
 {
     // gravity
-    velocity.y += 0.5;
+    velocity.y += 0.5 * 0;
 }
 
 void MovingEntity::calculateBoundingPrismoid()

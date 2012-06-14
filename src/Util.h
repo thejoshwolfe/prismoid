@@ -126,7 +126,7 @@ inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &p
             return false;
         }
         float percent_to_intersection = numerator / denominator;
-        // check the bounds of the edge
+        // is it in front of us, and can we reach it?
         if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
             return false;
         intersection_point = edge_point + percent_to_intersection * edge_vector;

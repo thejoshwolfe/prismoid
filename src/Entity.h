@@ -17,8 +17,6 @@ public:
     Vector2 center;
     const Vector2 size;
     const sf::Color color;
-    const float elasticity;
-    const float friction;
 
     // inferred, cached.
     Prismoid bounding_prismoid;
@@ -26,8 +24,8 @@ public:
     float frame_progress;
 
 protected:
-    Entity(bool is_moving_entity, const Vector2 & center, const Vector2 & size, const sf::Color & color, float elasticity, float friction) :
-        is_moving_entity(is_moving_entity), center(center), size(size), color(color), elasticity(elasticity), friction(friction) {}
+    Entity(bool is_moving_entity, const Vector2 & center, const Vector2 & size, const sf::Color & color) :
+        is_moving_entity(is_moving_entity), center(center), size(size), color(color) {}
 
     static void makeRectangle(std::vector<Vector2>* polygon, const Vector2 &center, const Vector2 &size);
 };

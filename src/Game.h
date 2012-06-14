@@ -34,17 +34,18 @@ private:
         bool valid;
         MovingEntity * entity;
         Entity * other;
+        float time;
         Vector2 normal;
-        Collision(MovingEntity * entity, Entity * other, const Vector2 &normal) :
-            valid(true), entity(entity), other(other), normal(normal) {}
+        Collision(MovingEntity * entity, Entity * other, float time, const Vector2 &normal) :
+            valid(true), entity(entity), other(other), time(time), normal(normal) {}
     };
     std::multimap<Entity *, std::tr1::shared_ptr<Collision> > collisions_by_entity;
     std::priority_queue<Util::KeyAndValue<float, std::tr1::shared_ptr<Collision> > > collisions_by_time;
 
     void detectCollisions(MovingEntity * entity);
     bool detectCollision(MovingEntity * entity, Entity * other);
-    bool maybeAddCollision(float time, MovingEntity * entity, Entity * other, const Vector2 &normal);
-    void doCollision(float time, std::tr1::shared_ptr<Collision> collision);
+    bool maybeAddCollision(float time, MovingEntity * entity, Entity * other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2);
+    void doCollision(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions);
     void invalidateCollisions(MovingEntity *entity);
 
     Rectangle getBoundingRectangle(const Prismoid &prismoid);
