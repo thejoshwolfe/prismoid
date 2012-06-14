@@ -104,7 +104,7 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
             Edge this_edge;
             entity->bounding_prismoid.getEdge(j, &this_edge);
             Vector3 collision_point;
-            bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(this_edge, other_edge1, other_edge2, &collision_point);
+            bool is_collision = getEdgeIntersectionWithQuadrilateral(this_edge, other_edge1, other_edge2, &collision_point);
             if (!is_collision)
                 continue;
             Vector2 normal = other->bounding_prismoid.getNormal(i);
@@ -120,7 +120,7 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
             Edge other_edge;
             other->bounding_prismoid.getEdge(j, &other_edge);
             Vector3 collision_point;
-            bool is_collision = Util::getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
+            bool is_collision = getEdgeIntersectionWithQuadrilateral(other_edge, this_edge1, this_edge2, &collision_point);
             if (!is_collision)
                 continue;
             Vector2 normal = entity->bounding_prismoid.getNormal(i);
@@ -130,6 +130,53 @@ bool Game::detectCollision(MovingEntity *entity, Entity *other)
         }
     }
     return ever_added;
+}
+
+bool Game::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
+{
+    // http://en.wikipedia.org/wiki/Line-plane_intersection
+    Vector3 edge_point = edge.points[0];
+    Vector3 edge_vector = edge.points[1] - edge_point;
+    Vector3 plane_point = plane_edge1.points[0];
+    Vector3 plane_vector = Util::cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
+    float numerator = Util::dot(plane_point - edge_point, plane_vector);
+    Vector3 intersection_point;
+    if (numerator == 0) {
+        // intersects immediately
+        intersection_point = edge_point;
+    } else {
+        float denominator = Util::dot(edge_vector, plane_vector);
+        if (denominator == 0) {
+            // parallel and not intersecting
+            return false;
+        }
+        float percent_to_intersection = numerator / denominator;
+        // is it in front of us, and can we reach it?
+        if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
+            return false;
+        intersection_point = edge_point + percent_to_intersection * edge_vector;
+    }
+
+    // check the bounds of the face
+    Vector3 plane_points[] = {
+            plane_edge1.points[0],
+            plane_edge1.points[1],
+            plane_edge2.points[1],
+            plane_edge2.points[0],
+    };
+    const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
+    for (int i = 0; i < plane_points_count; i++) {
+        Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
+        Vector3 edge2 = plane_points[(i + 1) % plane_points_count] - plane_points[i];
+        Vector3 inward_direction = Util::cross(edge2, Util::cross(edge1, edge2));
+        bool is_inside = Util::dot(inward_direction, intersection_point - plane_points[i]) >= 0;
+        if (!is_inside)
+            return false; // miss
+    }
+
+    // hit
+    *output_intersection_point = intersection_point;
+    return true;
 }
 
 bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2)
@@ -147,7 +194,7 @@ bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, co
         return false;
     std::tr1::shared_ptr<Collision> collision(new Collision(entity, other, time, normal));
     Util::push(&collisions_by_time, time, collision);
-    Util::insert(&collisions_by_entity, static_cast<Entity*> (entity), collision);
+    Util::insert(&collisions_by_entity, static_cast<Entity*>(entity), collision);
     if (other != NULL && other->is_moving_entity)
         Util::insert(&collisions_by_entity, other, collision);
     return true;
@@ -170,7 +217,7 @@ void Game::doCollision(float time, const std::vector<std::tr1::shared_ptr<Collis
 
     if (other->is_moving_entity) {
         // snap the other to the collision point
-        MovingEntity * other_moving_entity = static_cast<MovingEntity*> (other);
+        MovingEntity * other_moving_entity = static_cast<MovingEntity*>(other);
         other_moving_entity->center += Util::scaleVector(time - other_moving_entity->frame_progress, other_moving_entity->velocity);
         other_moving_entity->frame_progress = time;
     }
@@ -184,13 +231,13 @@ void Game::doCollision(float time, const std::vector<std::tr1::shared_ptr<Collis
     entity->velocity += total_force;
     if (other->is_moving_entity) {
         // Newton's 3rd
-        static_cast<MovingEntity*> (other)->velocity -= total_force;
+        static_cast<MovingEntity*>(other)->velocity -= total_force;
     }
 
     // recalculate collisions for these entities
     invalidateCollisions(entity);
     if (other->is_moving_entity)
-        invalidateCollisions(static_cast<MovingEntity*> (other));
+        invalidateCollisions(static_cast<MovingEntity*>(other));
 }
 
 void Game::invalidateCollisions(MovingEntity *entity)

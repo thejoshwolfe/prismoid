@@ -44,6 +44,7 @@ private:
 
     void detectCollisions(MovingEntity * entity);
     bool detectCollision(MovingEntity * entity, Entity * other);
+    static bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point);
     bool maybeAddCollision(float time, MovingEntity * entity, Entity * other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2);
     void doCollision(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions);
     void invalidateCollisions(MovingEntity *entity);

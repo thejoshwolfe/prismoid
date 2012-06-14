@@ -107,53 +107,6 @@ inline Vector2 scaleVector(float factor, const Vector2 &vector)
     return result;
 }
 
-inline bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
-{
-    // http://en.wikipedia.org/wiki/Line-plane_intersection
-    Vector3 edge_point = edge.points[0];
-    Vector3 edge_vector = edge.points[1] - edge_point;
-    Vector3 plane_point = plane_edge1.points[0];
-    Vector3 plane_vector = cross(plane_edge1.points[1] - plane_point, plane_edge2.points[0] - plane_point);
-    float numerator = dot(plane_point - edge_point, plane_vector);
-    Vector3 intersection_point;
-    if (numerator == 0) {
-        // intersects immediately
-        intersection_point = edge_point;
-    } else {
-        float denominator = dot(edge_vector, plane_vector);
-        if (denominator == 0) {
-            // parallel and not intersecting
-            return false;
-        }
-        float percent_to_intersection = numerator / denominator;
-        // is it in front of us, and can we reach it?
-        if (!(0 <= percent_to_intersection && percent_to_intersection <= 1))
-            return false;
-        intersection_point = edge_point + percent_to_intersection * edge_vector;
-    }
-
-    // check the bounds of the face
-    Vector3 plane_points[] = {
-            plane_edge1.points[0],
-            plane_edge1.points[1],
-            plane_edge2.points[1],
-            plane_edge2.points[0],
-    };
-    const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
-    for (int i = 0; i < plane_points_count; i++) {
-        Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
-        Vector3 edge2 = plane_points[(i + 1) % plane_points_count] - plane_points[i];
-        Vector3 inward_direction = cross(edge2, cross(edge1, edge2));
-        bool is_inside = dot(inward_direction, intersection_point - plane_points[i]) >= 0;
-        if (!is_inside)
-            return false; // miss
-    }
-
-    // hit
-    *output_intersection_point = intersection_point;
-    return true;
-}
-
 template<typename T>
 sf::Vector2<T> perp(sf::Vector2<T> vector)
 {
