@@ -9,6 +9,32 @@ typedef sf::Vector2f Vector2;
 typedef sf::Vector3f Vector3;
 typedef sf::FloatRect Rectangle;
 
+// gimme the compare operators!
+namespace std {
+    template<>
+    struct less<Vector2>
+    {
+        bool operator()(const Vector2& left, const Vector2& right) const
+        {
+            if (left.x != right.x) return left.x < right.x;
+            if (left.y != right.y) return left.y < right.y;
+            return false;
+        }
+    };
+    template<>
+    struct less<sf::IntRect>
+    {
+        bool operator()(const sf::IntRect& left, const sf::IntRect& right) const
+        {
+            if (left.Left   != right.Left)   return left.Left   < right.Left;
+            if (left.Top    != right.Top)    return left.Top    < right.Top;
+            if (left.Right  != right.Right)  return left.Right  < right.Right;
+            if (left.Bottom != right.Bottom) return left.Bottom < right.Bottom;
+            return false;
+        }
+    };
+}
+
 struct Edge
 {
     Vector3 points[2];
@@ -20,20 +46,6 @@ struct Edge
     }
 private:
     Edge(const Edge &) {} // non-copyable
-};
-
-struct IntRectWithCompareOperator : public sf::IntRect
-{
-    IntRectWithCompareOperator() {}
-    IntRectWithCompareOperator(const sf::IntRect &copy) : sf::IntRect(copy) {}
-    bool operator<(const IntRectWithCompareOperator & other) const
-    {
-        if (this->Left != other.Left) return this->Left < other.Left;
-        if (this->Top != other.Top) return this->Top < other.Top;
-        if (this->Right != other.Right) return this->Right < other.Right;
-        if (this->Bottom != other.Bottom) return this->Bottom < other.Bottom;
-        return false;
-    }
 };
 
 namespace Util {
@@ -103,6 +115,7 @@ inline Vector2 scaleVector(float factor, const Vector2 &vector)
     return result;
 }
 
+/** rotates counterclockwise */
 template<typename T>
 sf::Vector2<T> perp(sf::Vector2<T> vector)
 {

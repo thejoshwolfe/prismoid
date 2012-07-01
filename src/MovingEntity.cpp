@@ -27,8 +27,6 @@ void MovingEntity::doController(Game *)
 
 void MovingEntity::calculateBoundingPrismoid()
 {
-    if (frame_progress != 0)
-        Util::assert(true, "");
     Vector2 remaining_velocity = Util::scaleVector(1 - frame_progress, velocity);
     std::vector<Vector2> here;
     makeRectangle(&here, center, size);

@@ -5,7 +5,7 @@
 Game::Game(std::string filename)
 {
     // moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 84), Vector2(0, 0)));
-    moving_entities.push_back(new PlayerEntity(Vector2(32+16, 16), Vector2(32, 32), Vector2(0, -1)));
+    moving_entities.push_back(new PlayerEntity(Vector2(32 + 16, 16), Vector2(32, 32), Vector2(0, -1)));
 
     TiledTmx * map = TiledTmx::load(filename);
     Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
@@ -91,38 +91,29 @@ void Game::detectCollisions(MovingEntity * entity)
     }
     if (!ever_added) {
         // add a fake collision so that the entity will be updated at all
-        maybeAddCollision(1, entity, NULL, Vector2(), Vector2(), Vector2());
+        addCollision(std::tr1::shared_ptr<Collision>(new Collision(entity)));
     }
 }
 
-bool Game::detectCollision(MovingEntity *entity, Entity *other)
+bool Game::detectCollision(MovingEntity *moving_entity, Entity *other)
 {
     bool ever_added = false;
-    Entity* entities[] = { entity, other, };
-    for (int e = 0; e < 2; e++) {
-        Entity * edge_entity = entities[e];
-        Entity * face_entity = entities[1 - e];
-        for (int i = 0; i < face_entity->bounding_prismoid.size(); i++) {
+    Entity* entities[] = { moving_entity, other, };
+    for (int entity_index = 0; entity_index < 2; entity_index++) {
+        Entity * edge_entity = entities[entity_index];
+        Entity * face_entity = entities[1 - entity_index];
+        for (int face_index = 0; face_index < face_entity->bounding_prismoid.size(); face_index++) {
             Edge face_edge1, face_edge2;
-            face_entity->bounding_prismoid.getFace(i, &face_edge1, &face_edge2);
-            for (int j = 0; j < edge_entity->bounding_prismoid.size(); j++) {
+            face_entity->bounding_prismoid.getFace(face_index, &face_edge1, &face_edge2);
+            for (int edge_index = 0; edge_index < edge_entity->bounding_prismoid.size(); edge_index++) {
                 Edge edge;
-                edge_entity->bounding_prismoid.getEdge(j, &edge);
+                edge_entity->bounding_prismoid.getEdge(edge_index, &edge);
                 Vector3 collision_point;
                 bool is_collision = getEdgeIntersectionWithQuadrilateral(edge, face_edge1, face_edge2, &collision_point);
                 if (!is_collision)
                     continue;
-                Vector2 normal = face_entity->bounding_prismoid.getNormal(i);
-                Vector2 adjacent_edge1, adjacent_edge2;
-                edge_entity->bounding_prismoid.getAdjacentCapEdgeVectors(j, &adjacent_edge1, &adjacent_edge2);
-                if (entity == face_entity) {
-                    // if the collision is on our own face, point the normals back in toward us.
-                    normal = -normal;
-                    adjacent_edge1 = -adjacent_edge1;
-                    adjacent_edge2 = -adjacent_edge2;
-                }
-                if (maybeAddCollision(collision_point.z, entity, other, normal, adjacent_edge1, adjacent_edge2))
-                    ever_added = true;
+                addCollision(std::tr1::shared_ptr<Collision>(new Collision(moving_entity, edge_entity, face_entity, edge_index, face_index, collision_point.z)));
+                ever_added = true;
             }
         }
     }
@@ -155,12 +146,7 @@ bool Game::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &pl
     }
 
     // check the bounds of the face
-    Vector3 plane_points[] = {
-            plane_edge1.points[0],
-            plane_edge1.points[1],
-            plane_edge2.points[1],
-            plane_edge2.points[0],
-    };
+    Vector3 plane_points[] = { plane_edge1.points[0], plane_edge1.points[1], plane_edge2.points[1], plane_edge2.points[0], };
     const int plane_points_count = sizeof(plane_points) / sizeof(Vector3);
     for (int i = 0; i < plane_points_count; i++) {
         Vector3 edge1 = plane_points[(i + 3) % plane_points_count] - plane_points[i];
@@ -176,78 +162,154 @@ bool Game::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &pl
     return true;
 }
 
-bool Game::maybeAddCollision(float time, MovingEntity *entity, Entity *other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2)
+bool Game::maybeAddCollision(std::tr1::shared_ptr<Collision> collision)
 {
-    // don't count it if we're moving away (which happens right after bouncing)
-    // or if we're exactly parallel
-    if (other != NULL && Util::dot(entity->velocity - other->getVelocity(), normal) >= 0)
+    // don't bother considering collisions between vertexes and edges that physically can't ever contact each other.
+    // this is kinda like backface culling.
+    Vector2 adjacent_edge1, adjacent_edge2;
+    collision->vertex_entity->bounding_prismoid.getAdjacentCapEdgeVectors(collision->vertex_index, &adjacent_edge1, &adjacent_edge2);
+    Vector2 bounding_normal1 = -Util::normalized(Util::perp(adjacent_edge1));
+    Vector2 bounding_normal2 = Util::normalized(Util::perp(adjacent_edge2));
+    float vertex_angle = Util::dot(bounding_normal1, bounding_normal2);
+    Vector2 edge_normal = Util::normalized(collision->edge_entity->bounding_prismoid.getNormal(collision->edge_index));
+    if (Util::dot(bounding_normal1, edge_normal) < vertex_angle)
         return false;
-    // don't count it if the normal is impossible to reach this vertex.
-    // this happens when the back corner scrapes by the backward-facing vertex of a floor tile.
-    float normal_angle_limit = Util::dot(Util::normalized(adjacent_edge1), Util::normalized(adjacent_edge2));
-    if (Util::dot(Util::normalized(normal), Util::normalized(adjacent_edge1)) < normal_angle_limit)
+    if (Util::dot(bounding_normal2, edge_normal) < vertex_angle)
         return false;
-    if (Util::dot(Util::normalized(normal), Util::normalized(adjacent_edge2)) < normal_angle_limit)
-        return false;
-    std::tr1::shared_ptr<Collision> collision(new Collision(entity, other, time, normal));
-    Util::push(&collisions_by_time, time, collision);
-    Util::insert(&collisions_by_entity, static_cast<Entity*>(entity), collision);
-    if (other != NULL && other->is_moving_entity)
-        Util::insert(&collisions_by_entity, other, collision);
+    addCollision(collision);
     return true;
 }
 
+void Game::addCollision(std::tr1::shared_ptr<Collision> collision)
+{
+    Util::push(&collisions_by_time, collision->time, collision);
+    Util::insert(&collisions_by_entity, collision->moving_entity, collision);
+}
+
+// debugging
+#include <iostream>
+#include "debugging_helpers.h"
+
 void Game::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
 {
-    std::tr1::shared_ptr<Collision> collision = collisions[0];
-    MovingEntity * entity = collision->entity;
-    Entity * other = collision->other;
+    // TODO: this block assumes only 1 moving entity.
+    {
+        // some things are going to be identical regardless of the number of collisions
+        std::tr1::shared_ptr<Collision> collision = collisions[0];
+        MovingEntity * moving_entity = collision->moving_entity;
 
-    // snap to the collision point
-    entity->center += Util::scaleVector(time - entity->frame_progress, entity->velocity);
-    entity->frame_progress = time;
+        // snap to the collision point
+        moving_entity->center += Util::scaleVector(time - moving_entity->frame_progress, moving_entity->velocity);
+        moving_entity->frame_progress = time;
 
-    if (other == NULL) {
-        // not really a collision
-        return;
+        if (!collision->is_actual_collision)
+            return;
+
+        // recalculate collisions for this entity
+        invalidateCollisions(moving_entity);
     }
 
-    if (other->is_moving_entity) {
-        // snap the other to the collision point
-        MovingEntity * other_moving_entity = static_cast<MovingEntity*>(other);
-        other_moving_entity->center += Util::scaleVector(time - other_moving_entity->frame_progress, other_moving_entity->velocity);
-        other_moving_entity->frame_progress = time;
-    }
+    // deal with each pair of entities individually
+    std::set<std::pair<MovingEntity *, Entity *> > entities;
+    std::multimap<std::pair<MovingEntity *, Entity *>, std::tr1::shared_ptr<Collision> > entities_to_collisions;
 
-    // bounce
-    Vector2 normal = Util::normalized(collision->normal);
-    Vector2 relative_velocity = entity->velocity - other->getVelocity();
-    Vector2 normal_component = Util::dot(relative_velocity, normal) * normal;
-    Vector2 normal_force = -normal_component;
-    Vector2 total_force = normal_force;
-    entity->velocity += total_force;
-    if (other->is_moving_entity) {
-        // Newton's 3rd
-        static_cast<MovingEntity*>(other)->velocity -= total_force;
+    for (int i = 0; i < (int)collisions.size(); i++) {
+        std::tr1::shared_ptr<Collision> collision = collisions[i];
+        std::pair<MovingEntity *, Entity *> pair(collision->moving_entity, collision->moving_entity == collision->vertex_entity ? collision->edge_entity : collision->vertex_entity);
+        entities.insert(pair);
+        Util::insert(&entities_to_collisions, pair, collision);
     }
+    for (std::set<std::pair<MovingEntity *, Entity *> >::iterator entities_iterator = entities.begin(); entities_iterator != entities.end(); entities_iterator++) {
+        MovingEntity * moving_entity = entities_iterator->first;
+        std::pair<std::multimap<std::pair<MovingEntity *, Entity *>, std::tr1::shared_ptr<Collision> >::iterator,
+                std::multimap<std::pair<MovingEntity *, Entity *>, std::tr1::shared_ptr<Collision> >::iterator> range = entities_to_collisions.equal_range(*entities_iterator);
+        // count how many edges intersect with each vertex to detect vertex-vertex collisions.
+        std::set<std::pair<Entity *, int> > entity_vertexes;
+        std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> > entity_vertex_collisions;
+        for (std::multimap<std::pair<MovingEntity *, Entity *>, std::tr1::shared_ptr<Collision> >::iterator collision_iterator = range.first; collision_iterator != range.second; collision_iterator++) {
+            std::tr1::shared_ptr<Collision> collision = collision_iterator->second;
+            std::pair<Entity *, int> pair(collision->vertex_entity, collision->vertex_index);
+            entity_vertexes.insert(pair);
+            Util::insert(&entity_vertex_collisions, pair, collision);
+        }
+        std::set<Vector2> collision_normals;
+        for (std::set<std::pair<Entity *, int> >::iterator entity_vertex_iterator = entity_vertexes.begin(); entity_vertex_iterator != entity_vertexes.end(); entity_vertex_iterator++) {
+            std::pair<std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator>
+                    entity_vertex_collision_range = entity_vertex_collisions.equal_range(*entity_vertex_iterator);
+            int count = std::distance(entity_vertex_collision_range.first, entity_vertex_collision_range.second);
+            std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator entity_vertex_collision_iterator = entity_vertex_collision_range.first;
+            if (count == 1) {
+                // vertex-edge collision. easy to understand.
+                collision_normals.insert(Util::normalized(entity_vertex_collision_iterator->second->getNormal()));
+            } else if (count == 2) {
+                // this is a vertex-vertex collision. oh dear.
+                std::tr1::shared_ptr<Collision> participating_collisions[4];
+                participating_collisions[0] = entity_vertex_collision_iterator->second;
+                entity_vertex_collision_iterator++;
+                participating_collisions[1] = entity_vertex_collision_iterator->second;
+                // select the index of the edge with the greater index (and account for wrap around)
+                int other_vertex_index = participating_collisions[ //
+                        (participating_collisions[0]->edge_index + 1) % participating_collisions[0]->edge_entity->bounding_prismoid.size() == participating_collisions[1]->edge_index ? 1 : 0 //
+                        ]->edge_index;
+                std::pair<Entity *, int> other_pair(participating_collisions[0]->edge_entity, other_vertex_index);
+                std::pair<std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator>
+                        other_range = entity_vertex_collisions.equal_range(other_pair);
+                Util::assert(std::distance(other_range.first, other_range.second) == 2, "dbf71330b0fabca40121e5fda23a47e5");
+                std::multimap<std::pair<Entity *, int>, std::tr1::shared_ptr<Collision> >::iterator other_iterator = other_range.first;
+                participating_collisions[2] = other_iterator->second;
+                other_iterator++;
+                participating_collisions[3] = other_iterator->second;
 
-    // recalculate collisions for these entities
-    invalidateCollisions(entity);
-    if (other->is_moving_entity)
-        invalidateCollisions(static_cast<MovingEntity*>(other));
+                // at this point, we have something like this:
+                // std::cout << s(participating_collisions) << std::endl;
+                //     (M.0(<32,0>), S.0(<0,0>,<32,0>), <0,-32>)
+                //     (M.0(<32,0>), S.1(<32,0>,<32,32>), <32,-0>)
+                //     (S.1(<32,0>), M.3(<32,32>,<32,0>), <32,0>)
+                //     (S.1(<32,0>), M.0(<32,0>,<64,0>), <-0,32>)
+                std::set<Vector2> competing_normals;
+                // TODO: the order here is not deterministic.
+                // TODO: Check to make sure we're pairing up the proper ones against each other.
+                // TODO: A good solution would be to split participating_collisions into two arrays, and order the members before getting here.
+                for (int i = 0; i < 2; i++) {
+                    Vector2 left_normal = Util::normalized(participating_collisions[i + 0]->getNormal());
+                    Vector2 right_normal = Util::normalized(participating_collisions[i + 2]->getNormal());
+                    float relative_angle = Util::dot(left_normal, Util::perp(right_normal));
+                    if ((relative_angle < 0) == (i == 0))
+                        competing_normals.insert(left_normal);
+                    else
+                        competing_normals.insert(right_normal);
+                }
+                if (competing_normals.size() == 1)
+                    collision_normals.insert(*competing_normals.begin());
+                else
+                    Util::assert(false, "TODO aaef45fcdf8136f6dedb1e7b09e3e422");
+            } else {
+                Util::assert(false, "c5196591ea2d8ad7e15d79f7cff263bb");
+            }
+        }
+        Util::assert(collision_normals.size() == 1, "TODO e48291511ee88e8538f84e060bd4c8c1");
+        // time to make decisions about these entities colliding.
+        Vector2 normal = *collision_normals.begin();
+        Vector2 normal_component = Util::dot(moving_entity->velocity, normal) * normal;
+        Vector2 force = -normal_component;
+        moving_entity->velocity += force;
+        std::cout << s(normal) << " -> " << s(moving_entity->velocity) << std::endl;
+    }
 }
 
 void Game::invalidateCollisions(MovingEntity *entity)
 {
     // mark any other collisions invalid
-    std::pair<std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator> range =
+    std::pair<std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> >::iterator> range =
             collisions_by_entity.equal_range(entity);
-    for (std::multimap<Entity *, std::tr1::shared_ptr<Collision> >::iterator iterator = range.first; iterator != range.second; iterator++)
+    for (std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> >::iterator iterator = range.first; iterator != range.second; iterator++)
         iterator->second->valid = false;
     collisions_by_entity.erase(range.first, range.second);
-    // put it back in the list
-    entity->calculateBoundingPrismoid();
-    detectCollisions(entity);
+    if (false) {
+        // TODO: put it back in the list
+        entity->calculateBoundingPrismoid();
+        detectCollisions(entity);
+    }
 }
 
 void Game::render(sf::RenderTarget *render_target)

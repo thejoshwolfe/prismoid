@@ -4,8 +4,8 @@
 #include "Util.h"
 
 // For discussion purposes, let the quadrilateral [A,B,C,D] be one cap of this prismoid.
-// (Note that the caps can be any n-gons, not just quadrilaterals).
 // The other cap shall be [A1,B1,C1,D1].
+// (Note that the caps can be any simple n-gon ( http://en.wikipedia.org/wiki/Simple_polygon )).
 
 // Note: this class does not prevent the "prismoid"-definition violation of
 // non-parallel corresponding edges in bases, such as [A,B] not parallel to [A1,B1]
@@ -46,17 +46,21 @@ public:
         getEdge(i, edge1);
         getEdge((i + 1) % size(), edge2);
     }
-    /** such as normal to [A,B] */
-    Vector2 getNormal(int i)
+    /** such as normal to [A,B]. Note this is NOT normalized; it just points in the right direction. */
+    Vector2 getNormal(int i) const
     {
         // assumes clockwise, or something
         return Util::perp(bases[0][(i + 1) % size()] - bases[0][i]);
     }
     /** such as B-A, D-A */
-    void getAdjacentCapEdgeVectors(int i, Vector2 * adjacent_edge1, Vector2 * adjacent_edge2)
+    void getAdjacentCapEdgeVectors(int i, Vector2 * adjacent_edge1, Vector2 * adjacent_edge2) const
     {
         *adjacent_edge1 = bases[0][(i + 1) % size()] - bases[0][i];
-        *adjacent_edge2 = bases[0][(i - 1) % size()] - bases[0][i];
+        *adjacent_edge2 = bases[0][(i + size() - 1) % size()] - bases[0][i];
+    }
+    Vector2 getCapVertex(int i) const
+    {
+        return bases[0][i];
     }
 };
 

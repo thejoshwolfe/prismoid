@@ -7,6 +7,34 @@
 
 #include <tr1/memory>
 
+struct Collision {
+    bool valid;
+    bool is_actual_collision;
+
+    // so we know which one is the moving one.
+    MovingEntity * moving_entity;
+    // one of these two will be the same as the one above
+    Entity * vertex_entity;
+    Entity * edge_entity;
+    int vertex_index;
+    int edge_index;
+
+    float time;
+    /** real collision */
+    Collision(MovingEntity * moving_entity, Entity * vertex_entity, Entity * edge_entity, int vertex_index, int edge_index, float time) :
+        valid(true), is_actual_collision(true), moving_entity(moving_entity), vertex_entity(vertex_entity), edge_entity(edge_entity), vertex_index(vertex_index), edge_index(edge_index), time(time) {}
+    /** fake collision */
+    explicit Collision(MovingEntity * moving_entity) :
+        valid(true), is_actual_collision(false), moving_entity(moving_entity), time(1) {}
+    Vector2 getNormal() const
+    {
+        Vector2 result = edge_entity->bounding_prismoid.getNormal(edge_index);
+        if (edge_entity == moving_entity)
+            result = -result;
+        return result;
+    }
+};
+
 class Game
 {
 public:
@@ -21,7 +49,7 @@ private:
     // important
     std::vector<MovingEntity *> moving_entities;
     sf::Image tileset_image;
-    std::map<IntRectWithCompareOperator, sf::Image*> tileset_images;
+    std::map<sf::IntRect, sf::Image*> tileset_images;
     int tile_size;
     int layer_width;
     int layer_height;
@@ -30,22 +58,14 @@ private:
     // temporary
     const sf::Input * input;
 
-    struct Collision {
-        bool valid;
-        MovingEntity * entity;
-        Entity * other;
-        float time;
-        Vector2 normal;
-        Collision(MovingEntity * entity, Entity * other, float time, const Vector2 &normal) :
-            valid(true), entity(entity), other(other), time(time), normal(normal) {}
-    };
-    std::multimap<Entity *, std::tr1::shared_ptr<Collision> > collisions_by_entity;
+    std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> > collisions_by_entity;
     std::priority_queue<Util::KeyAndValue<float, std::tr1::shared_ptr<Collision> > > collisions_by_time;
 
     void detectCollisions(MovingEntity * entity);
     bool detectCollision(MovingEntity * entity, Entity * other);
     static bool getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point);
-    bool maybeAddCollision(float time, MovingEntity * entity, Entity * other, const Vector2 &normal, const Vector2 &adjacent_edge1, const Vector2 &adjacent_edge2);
+    bool maybeAddCollision(std::tr1::shared_ptr<Collision> collision);
+    void addCollision(std::tr1::shared_ptr<Collision> collision);
     void doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions);
     void invalidateCollisions(MovingEntity *entity);
 
