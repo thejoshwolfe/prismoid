@@ -37,7 +37,7 @@ endef
 define stray-object
  .PHONY: $1.cleanup
  $1.cleanup:
-	rm -f $1 $1.d
+	rm -f $1 $1.d $1.command.*.timestamp
  all: $1.cleanup
 endef
 
