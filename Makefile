@@ -20,16 +20,17 @@ endef
 
 define hash-timestamp
  $1.HASH := $2.$$(strip $$(call hash,$3)).timestamp
- $$(eval $$(call lazy-create-dir,$1.HASH))
+ $$(eval $$(call lazy-create-dir,$$($1.HASH)))
  $$($1.HASH):
-	@rm -f $2.*.timestamp
-	@touch $$@
+	rm -f $2.*.timestamp && touch $$@
 endef
 
 define object
  $$(eval $$(call lazy-create-dir,$1))
- $1: $2
-	g++ -o $1 -c -g $$(addprefix -I,$3) $2 -MMD -MP -MF $1.d
+ $1.COMMAND = g++ -o $1 -c -g $$(addprefix -I,$3) $2 -MMD -MP -MF $1.d
+ $$(eval $$(call hash-timestamp,$1.COMMAND,$1.command,$$($1.COMMAND)))
+ $1: $2 $$($1.COMMAND.HASH)
+	$$($1.COMMAND)
  -include $1.d
 endef
 
@@ -42,15 +43,19 @@ endef
 
 define binary
  $1.OUT = out/obj.$1
- $1.SOURCE_DIRS = $$(addprefix $$(SRC)/,$1 $$(SHARED))
+
+ $1.SOURCE_DIRS = $$(sort $$(addprefix $$(SRC)/,$1 $$(SHARED)))
  $1.SOURCES := $$(foreach i,$$($1.SOURCE_DIRS),$$(wildcard $$i/*.cpp))
- $1.OBJECTS = $$(foreach i,$$($1.SOURCES),$$($1.OUT)/$$i.o)
+ $1.OBJECTS = $$(sort $$(foreach i,$$($1.SOURCES),$$($1.OUT)/$$i.o))
  $$(foreach i,$$($1.SOURCES),$$(eval $$(call object,$$($1.OUT)/$$i.o,$$i,$$($1.SOURCE_DIRS))))
  $1.STRAY_OBJECTS := $$(filter-out $$($1.OBJECTS),$$(shell find $$($1.OUT) -name \*.o 2>/dev/null))
  $$(foreach i,$$($1.STRAY_OBJECTS),$$(eval $$(call stray-object,$$i)))
- $1.BINARY = $$($1.OUT)/$1
- $$($1.BINARY): $$($1.OBJECTS)
-	g++ -o $$@ $$($1.OBJECTS) -lsfml-graphics -lsfml-window
+
+ $1.BINARY = $$(OUT)/$1
+ $1.BINARY.COMMAND = g++ -o $$@ $$($1.OBJECTS) -l sfml-graphics -l sfml-window
+ $$(eval $$(call hash-timestamp,$1.BINARY.COMMAND,$$($1.OUT)/@.command,$$($1.BINARY.COMMAND)))
+ $$($1.BINARY): $$($1.OBJECTS) $$($1.BINARY.COMMAND.HASH)
+	$$($1.BINARY.COMMAND)
  all: $$($1.BINARY)
 endef
 
