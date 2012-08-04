@@ -27,7 +27,7 @@ endef
 
 define object
  $$(eval $$(call lazy-create-dir,$1))
- $1.COMMAND = g++ -o $1 -c -g $$(addprefix -I,$3) $2 -MMD -MP -MF $1.d
+ $1.COMMAND = g++ -o $1 -c -g $$(addprefix -I ,$3) $2 -MMD -MP -MF $1.d
  $$(eval $$(call hash-timestamp,$1.COMMAND,$1.command,$$($1.COMMAND)))
  $1: $2 $$($1.COMMAND.HASH)
 	$$($1.COMMAND)
