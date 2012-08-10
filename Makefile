@@ -78,7 +78,7 @@ define binary
  # make rules for this executable
  $1.BINARY = $$(OUT)/$1
  # depend on the command string so that changing link parameters causes a rebuild.
- $1.BINARY.COMMAND = g++ -o $$@ $$($1.OBJECTS) -l sfml-graphics -l sfml-window
+ $1.BINARY.COMMAND = g++ -o $$@ $$($1.OBJECTS) -l sfml-graphics -l sfml-window -l z
  $$(eval $$(call hash-timestamp,$1.BINARY.COMMAND.HASH,$$($1.OUT)/@.command,$$($1.BINARY.COMMAND)))
  $$($1.BINARY): $$($1.OBJECTS) $$($1.BINARY.COMMAND.HASH)
 	$$($1.BINARY.COMMAND)

@@ -1,53 +1,7 @@
-#include "Game.h"
+#include "Physics.h"
 
-#include "PlayerEntity.h"
-
-Game::Game(std::string filename)
+void Physics::doFrame()
 {
-    // moving_entities.push_back(new PlayerEntity(Vector2(100, -50), Vector2(30, 84), Vector2(0, 0)));
-    moving_entities.push_back(new PlayerEntity(Vector2(32 + 16, 16), Vector2(32, 32), Vector2(0, -1)));
-
-    TiledTmx * map = TiledTmx::load(filename);
-    Util::assert(tileset_image.LoadFromFile(map->tilesetImageFilename()), "image load");
-    tile_size = map->tileSize();
-    layer_width = map->width();
-    layer_height = map->height();
-    physics_layer = new StaticEntity*[layer_width * layer_height];
-    for (int y = 0; y < layer_height; y++) {
-        for (int x = 0; x < layer_width; x++) {
-            Tile tile = map->tile(x, y);
-            StaticEntity * entity = NULL;
-            if (tile.global_id() != 0) {
-                // we have to create subimages manually. see https://github.com/thejoshwolfe/grinch/issues/2
-                sf::IntRect sub_rect = map->tilesetImageOffset(tile.global_id());
-                sf::Image* image;
-                if (tileset_images.count(sub_rect)) {
-                    image = tileset_images[sub_rect];
-                } else {
-                    image = new sf::Image(sub_rect.GetWidth(), sub_rect.GetHeight());
-                    image->Copy(tileset_image, 0, 0, sub_rect);
-                    tileset_images[sub_rect] = image;
-                }
-                entity = new StaticEntity(Vector2(x * tile_size + tile_size / 2, y * tile_size + tile_size / 2), Vector2(tile_size, tile_size), *image, tile.is_flipped_horizontally(),
-                        tile.is_flipped_vertically(), tile.is_flipped_diagonally());
-            }
-            physics_layer[y * layer_width + x] = entity;
-        }
-    }
-    delete map;
-}
-
-void Game::doFrame(const sf::Input * input)
-{
-    for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->frame_progress = 0;
-
-    // run controllers
-    this->input = input;
-    for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->doController(this);
-
-    // first pass
     // determine desired motion
     for (int i = 0; i < (int)moving_entities.size(); i++)
         moving_entities[i]->calculateBoundingPrismoid();
@@ -70,16 +24,20 @@ void Game::doFrame(const sf::Input * input)
             doCollisions(time, collisions);
     }
     collisions_by_entity.clear();
+
+    // reset frame progress
+    for (int i = 0; i < (int)moving_entities.size(); i++)
+        moving_entities[i]->frame_progress = 0;
 }
 
-void Game::detectCollisions(MovingEntity * entity)
+void Physics::detectCollisions(MovingEntity * entity)
 {
     bool ever_added = false;
 
     // only check static entities in the tiles we'll be intersecting.
     Rectangle bounding_rectangle = getBoundingRectangle(entity->bounding_prismoid);
     std::vector<StaticEntity *> static_entities;
-    getStaticEntities(static_entities, bounding_rectangle);
+    static_entity_provider->getStaticEntities(static_entities, bounding_rectangle);
     for (int j = 0; j < (int)static_entities.size(); j++)
         ever_added |= detectCollision(entity, static_entities[j]);
 
@@ -95,7 +53,7 @@ void Game::detectCollisions(MovingEntity * entity)
     }
 }
 
-bool Game::detectCollision(MovingEntity *moving_entity, Entity *other)
+bool Physics::detectCollision(MovingEntity *moving_entity, Entity *other)
 {
     bool ever_added = false;
     Entity* entities[] = { moving_entity, other, };
@@ -120,7 +78,7 @@ bool Game::detectCollision(MovingEntity *moving_entity, Entity *other)
     return ever_added;
 }
 
-bool Game::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
+bool Physics::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &plane_edge1, const Edge &plane_edge2, Vector3 *output_intersection_point)
 {
     // http://en.wikipedia.org/wiki/Line-plane_intersection
     Vector3 edge_point = edge.points[0];
@@ -162,7 +120,7 @@ bool Game::getEdgeIntersectionWithQuadrilateral(const Edge &edge, const Edge &pl
     return true;
 }
 
-bool Game::maybeAddCollision(std::tr1::shared_ptr<Collision> collision)
+bool Physics::maybeAddCollision(std::tr1::shared_ptr<Collision> collision)
 {
     // don't bother considering collisions between vertexes and edges that physically can't ever contact each other.
     // this is kinda like backface culling.
@@ -180,7 +138,7 @@ bool Game::maybeAddCollision(std::tr1::shared_ptr<Collision> collision)
     return true;
 }
 
-void Game::addCollision(std::tr1::shared_ptr<Collision> collision)
+void Physics::addCollision(std::tr1::shared_ptr<Collision> collision)
 {
     Util::push(&collisions_by_time, collision->time, collision);
     Util::insert(&collisions_by_entity, collision->moving_entity, collision);
@@ -190,7 +148,7 @@ void Game::addCollision(std::tr1::shared_ptr<Collision> collision)
 #include <iostream>
 #include "debugging_helpers.h"
 
-void Game::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
+void Physics::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
 {
     // TODO: this block assumes only 1 moving entity.
     {
@@ -297,7 +255,7 @@ void Game::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Colli
     }
 }
 
-void Game::invalidateCollisions(MovingEntity *entity)
+void Physics::invalidateCollisions(MovingEntity *entity)
 {
     // mark any other collisions invalid
     std::pair<std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> >::iterator, std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> >::iterator> range =
@@ -312,25 +270,7 @@ void Game::invalidateCollisions(MovingEntity *entity)
     }
 }
 
-void Game::render(sf::RenderTarget *render_target)
-{
-    render_target->GetDefaultView().SetCenter(0, 0);
-    Vector2 virtual_center = moving_entities[0]->center;
-
-    float width_apothem = render_target->GetWidth() / 2;
-    float height_apothem = render_target->GetHeight() / 2;
-    Rectangle bounding_rectangle( //
-            virtual_center.x - width_apothem, virtual_center.y - height_apothem, //
-            virtual_center.x + width_apothem, virtual_center.y + height_apothem);
-    std::vector<StaticEntity *> static_entities;
-    getStaticEntities(static_entities, bounding_rectangle);
-    for (int i = 0; i < (int)static_entities.size(); i++)
-        static_entities[i]->render(virtual_center, render_target);
-    for (int i = 0; i < (int)moving_entities.size(); i++)
-        moving_entities[i]->render(virtual_center, render_target);
-}
-
-Rectangle Game::getBoundingRectangle(const Prismoid &prismoid)
+Rectangle Physics::getBoundingRectangle(const Prismoid &prismoid)
 {
     Edge edge;
     // initialize min and max with just any value that's in the prismoid.
@@ -349,28 +289,4 @@ Rectangle Game::getBoundingRectangle(const Prismoid &prismoid)
         }
     }
     return Rectangle(min.x, min.y, max.x, max.y);
-}
-
-void Game::getStaticEntities(std::vector<StaticEntity *> &static_entities, const Rectangle &bounding_rectangle)
-{
-    // when considering the exact edge between two tiles, grab both tiles.
-    // for example, if the bounding rectangle is [0,0,0,0],
-    // return all 4 tiles that touch that point: [-1,-1]->[0,0]
-    int min_x = Util::toTileIndexCeilinged(bounding_rectangle.Left, tile_size) - 1;
-    int min_y = Util::toTileIndexCeilinged(bounding_rectangle.Top, tile_size) - 1;
-    int max_x = Util::toTileIndexCeilinged(bounding_rectangle.Right, tile_size);
-    int max_y = Util::toTileIndexCeilinged(bounding_rectangle.Bottom, tile_size);
-
-    min_x = Util::max(min_x, 0);
-    min_y = Util::max(min_y, 0);
-    max_x = Util::min(max_x, layer_width - 1);
-    max_y = Util::min(max_y, layer_height - 1);
-
-    for (int y = min_y; y <= max_y; y++) {
-        for (int x = min_x; x <= max_x; x++) {
-            StaticEntity * entity = physics_layer[y * layer_width + x];
-            if (entity != NULL)
-                static_entities.push_back(entity);
-        }
-    }
 }

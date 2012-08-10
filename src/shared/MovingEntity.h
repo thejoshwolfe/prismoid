@@ -12,14 +12,10 @@ public:
         EntityType_MovingEntity,
         EntityType_PlayerEntity,
     };
-    MovingEntity(const Vector2 & center, const Vector2 & size, const sf::Color & color, const Vector2 & velocity) :
-        Entity(center, size, color), velocity(velocity) {}
+    MovingEntity(const Vector2 & center, const Vector2 & size, const Vector2 & velocity) :
+        Entity(center, size), velocity(velocity) {}
 
     virtual EntityType getType() { return EntityType_MovingEntity; }
-
-    virtual void render(Vector2 virtual_center, sf::RenderTarget *render_target);
-
-    virtual void doController(Game * game);
 
     void calculateBoundingPrismoid();
 

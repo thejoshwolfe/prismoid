@@ -1,9 +1,14 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Graphics/Rect.hpp>
+#include <queue>
+#include <map>
+#include <set>
 #include <cmath>
 #include <limits>
+#include <tr1/memory>
 
 typedef sf::Vector2f Vector2;
 typedef sf::Vector3f Vector3;
@@ -86,6 +91,15 @@ inline Vector2 normalized(Vector2 vector)
     if (_magnitude == 0)
         return Vector2();
     return vector / _magnitude;
+}
+
+inline void makeRectangle(std::vector<Vector2>* polygon, const Vector2 &center, const Vector2 &size)
+{
+    // clockwise
+    polygon->push_back(Vector2(center.x - size.x / 2, center.y - size.y / 2));
+    polygon->push_back(Vector2(center.x + size.x / 2, center.y - size.y / 2));
+    polygon->push_back(Vector2(center.x + size.x / 2, center.y + size.y / 2));
+    polygon->push_back(Vector2(center.x - size.x / 2, center.y + size.y / 2));
 }
 
 template<typename T>

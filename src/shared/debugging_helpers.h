@@ -1,7 +1,7 @@
 #ifndef DEBUGGING_HELPERS_H_
 #define DEBUGGING_HELPERS_H_
 
-#include "Game.h"
+#include "Physics.h"
 
 #include <sstream>
 

@@ -26,5 +26,14 @@ void PlayerEntity::doController(Game *game)
                  input->IsKeyDown(sf::Key::K);
     if (!was_jumping && is_jumping)
         velocity.y -= jump_acceleration;
-    MovingEntity::doController(game);
+}
+
+void PlayerEntity::render(Vector2 virtual_center, sf::RenderTarget * render_target)
+{
+    sf::Shape shape = sf::Shape();
+    std::vector<Vector2> polygon;
+    Util::makeRectangle(&polygon, center, size);
+    for (int i = 0; i < (int)polygon.size(); i++)
+        shape.AddPoint(Util::toRenderPoint(virtual_center, polygon[i]), sf::Color::Blue);
+    render_target->Draw(shape);
 }

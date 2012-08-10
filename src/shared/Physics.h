@@ -1,11 +1,8 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef PHYSICS_H
+#define PHYSICS_H
 
 #include "MovingEntity.h"
-#include "StaticEntity.h"
-#include "TiledTmx.h"
-
-#include <tr1/memory>
+#include "StaticEntityProvider.h"
 
 struct Collision {
     bool valid;
@@ -35,29 +32,17 @@ struct Collision {
     }
 };
 
-class Game
+class Physics
 {
 public:
-    Game(std::string filename);
+    Physics(StaticEntityProvider * static_entity_provider) : static_entity_provider(static_entity_provider) {}
+    void doFrame();
 
-    void doFrame(const sf::Input * input);
-    void render(sf::RenderTarget * render_target);
-
-    const sf::Input * getInput() { return input; }
+    // should this be private?
+    std::vector<MovingEntity *> moving_entities;
 
 private:
-    // important
-    std::vector<MovingEntity *> moving_entities;
-    sf::Image tileset_image;
-    std::map<sf::IntRect, sf::Image*> tileset_images;
-    int tile_size;
-    int layer_width;
-    int layer_height;
-    StaticEntity ** physics_layer;
-
-    // temporary
-    const sf::Input * input;
-
+    StaticEntityProvider * static_entity_provider;
     std::multimap<MovingEntity *, std::tr1::shared_ptr<Collision> > collisions_by_entity;
     std::priority_queue<Util::KeyAndValue<float, std::tr1::shared_ptr<Collision> > > collisions_by_time;
 
@@ -70,7 +55,6 @@ private:
     void invalidateCollisions(MovingEntity *entity);
 
     Rectangle getBoundingRectangle(const Prismoid &prismoid);
-    void getStaticEntities(std::vector<StaticEntity *> &static_entities, const Rectangle &bounding_rectangle);
 };
 
-#endif // GAME_H
+#endif
