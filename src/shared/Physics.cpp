@@ -1,5 +1,9 @@
 #include "Physics.h"
 
+// debugging
+#include <iostream>
+#include "debugging_helpers.h"
+
 void Physics::doFrame()
 {
     // determine desired motion
@@ -70,7 +74,9 @@ bool Physics::detectCollision(MovingEntity *moving_entity, Entity *other)
                 bool is_collision = getEdgeIntersectionWithQuadrilateral(edge, face_edge1, face_edge2, &collision_point);
                 if (!is_collision)
                     continue;
-                addCollision(std::tr1::shared_ptr<Collision>(new Collision(moving_entity, edge_entity, face_entity, edge_index, face_index, collision_point.z)));
+                std::tr1::shared_ptr<Collision> collision(new Collision(moving_entity, edge_entity, face_entity, edge_index, face_index, collision_point.z));
+                std::cout << "Adding collision: " << s(collision) << std::endl;
+                addCollision(collision);
                 ever_added = true;
             }
         }
@@ -143,10 +149,6 @@ void Physics::addCollision(std::tr1::shared_ptr<Collision> collision)
     Util::push(&collisions_by_time, collision->time, collision);
     Util::insert(&collisions_by_entity, collision->moving_entity, collision);
 }
-
-// debugging
-#include <iostream>
-#include "debugging_helpers.h"
 
 void Physics::doCollisions(float time, const std::vector<std::tr1::shared_ptr<Collision> > &collisions)
 {
