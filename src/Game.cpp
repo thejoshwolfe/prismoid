@@ -18,7 +18,7 @@ Game::Game(std::string filename)
             Tile tile = map->tile(x, y);
             StaticEntity * entity = NULL;
             if (tile.global_id() != 0) {
-                // we have to create subimages manually. see https://github.com/thejoshwolfe/grinch/issues/2
+                // we have to create subimages manually. see https://github.com/thejoshwolfe/prismoid/issues/2
                 sf::IntRect sub_rect = map->tilesetImageOffset(tile.global_id());
                 sf::Image* image;
                 if (tileset_images.count(sub_rect)) {
