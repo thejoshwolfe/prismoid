@@ -1,0 +1,29 @@
+{
+  files: {
+    "version": {
+      path: "build/full_version.txt",
+    },
+  },
+  globFiles: [
+    {
+      path: "assets/font/",
+      glob: "*",
+      prefix: "font/",
+    },
+  ],
+  textures: {
+    spritesheet: {
+      allowRotate90: false, // SDL2 textures don't let you override the vertex array
+      maxWidth: 512,
+      maxHeight: 512,
+      globImages: [
+        {
+          path: "assets/img/",
+          glob: "*",
+          prefix: "img/",
+          anchor: "topleft",
+        },
+      ],
+    }
+  }
+}
