@@ -2,15 +2,19 @@
 
 #include "input.hpp"
 
-Rect you_bounds = {{0, 0}, {32, 96}};
+Entity you = {{{0, 0}, {32, 96}}, {0, 0}};
 
 void run_the_game() {
+    Coord acceleration = {0, 0};
     if (input_state[INPUT_UP])
-        you_bounds.postion.y -= 1;
+        acceleration.y -= 1;
     if (input_state[INPUT_LEFT])
-        you_bounds.postion.x -= 1;
+        acceleration.x -= 1;
     if (input_state[INPUT_DOWN])
-        you_bounds.postion.y += 1;
+        acceleration.y += 1;
     if (input_state[INPUT_RIGHT])
-        you_bounds.postion.x += 1;
+        acceleration.x += 1;
+
+    you.velocity += acceleration;
+    you.bounds.postion += you.velocity;
 }

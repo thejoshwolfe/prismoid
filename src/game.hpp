@@ -1,9 +1,9 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 
-#include "geometry.hpp"
+#include "entity.hpp"
 
-extern Rect you_bounds;
+extern Entity you;
 
 void run_the_game();
 
