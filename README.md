@@ -87,3 +87,7 @@ Indentation Tab: Indentation policy: Spaces only.
 Check "Statements within a 'switch' body".
 Line Wrapping Tab: Maximum line width: 9999.
 Default indentation for wrapped lines: 1.
+
+Project -> Properties -> C/C++ General -> Code Analysis.
+Use project settings.
+Uncheck Potential Programming Problems/No Return.
