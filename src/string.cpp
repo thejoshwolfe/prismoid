@@ -284,3 +284,5 @@ int StringImpl::index_of_insensitive(const StringImpl &search) const {
     }
     return -1;
 }
+
+DEFINE_GDB_PY_SCRIPT("debug-scripts/string.py")

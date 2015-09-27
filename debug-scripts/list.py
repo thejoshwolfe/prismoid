@@ -1,5 +1,3 @@
-print("hello world from asdffdsa")
-
 import re
 
 list_regex = re.compile("List<.*>")
@@ -24,6 +22,5 @@ class ListPrinter(object):
     return "array"
   def to_string(self):
     return "List[" + str(self.value["_length"]) + "/" + str(self.value["_capacity"]) + "]"
-
 
 gdb.current_objfile().pretty_printers.append(value_matcher)

@@ -5,8 +5,6 @@
 #include "byte_buffer.hpp"
 #include "reference_counter.hpp"
 
-#include <stdint.h>
-
 static inline int find_percent_something(const char * fmt, char expected_code) {
     for (int i = 0; fmt[i] != '\0'; i++) {
         if (fmt[i] != '%')
@@ -170,12 +168,6 @@ static inline String new_string(const char * str) {
     ByteBuffer buffer;
     buffer.append(str);
     return new_string(buffer);
-}
-
-static inline void fprintf_string(FILE * stream, String string) {
-    ByteBuffer buffer;
-    string->encode(&buffer);
-    fprintf(stream, "%s", buffer.raw());
 }
 
 #endif
