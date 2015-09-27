@@ -8,7 +8,7 @@ bool request_shutdown = false;
 
 bool input_state[INPUT_COUNT];
 
-bool get_input_id_for_key_event(const SDL_KeyboardEvent & event, InputId * out_result) {
+static bool get_input_id_for_key_event(const SDL_KeyboardEvent & event, InputId * out_result) {
     switch (event.keysym.scancode) {
         case SDL_SCANCODE_W:
             *out_result = INPUT_UP;

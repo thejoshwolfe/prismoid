@@ -5,6 +5,7 @@
 #include "load_image.hpp"
 #include "string.hpp"
 #include "input.hpp"
+#include "game.hpp"
 
 #include <rucksack/rucksack.h>
 #include <SDL.h>
@@ -197,7 +198,7 @@ void render() {
     set_color(black);
     SDL_RenderClear(renderer);
 
-    render_sprite(man_stand_image, 0xff, 100, 100);
+    render_sprite(man_stand_image, 0xff, you_bounds.postion.x, you_bounds.postion.y);
     render_text(version_string, 0, window_height - 17);
     render_text(get_debug_string(), 0, window_height - 17 * 2);
 

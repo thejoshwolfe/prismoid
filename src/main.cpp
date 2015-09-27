@@ -1,11 +1,7 @@
 
-#include "util.hpp"
 #include "display.hpp"
 #include "input.hpp"
-
-static inline void run_the_game() {
-    // TODO
-}
+#include "game.hpp"
 
 int main() {
     display_init();
