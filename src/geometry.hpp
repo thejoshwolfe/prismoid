@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 struct Coord {
-    uint64_t x;
-    uint64_t y;
+    int64_t x; // millipixels
+    int64_t y;
 };
 
 struct Rect {

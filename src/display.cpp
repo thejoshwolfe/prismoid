@@ -31,6 +31,15 @@ static unsigned char * font_buffer;
 static SDL_RWops * font_rw_ops;
 static String version_string = new_string();
 
+struct ScreenCoord {
+    int x; // pixels
+    int y;
+};
+
+ScreenCoord to_screen(const Coord & coord) {
+    return ScreenCoord{(int)(coord.x / 1000), (int)(coord.y / 1000)};
+}
+
 static RuckSackImage * find_image(RuckSackImage ** spritesheet_images, long image_count, const char * name) {
     for (int i = 0; i < image_count; i++)
         if (strcmp(spritesheet_images[i]->key, name) == 0)
@@ -146,7 +155,7 @@ static void set_color(SDL_Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-static void render_sprite(RuckSackImage * sprite, int alpha, int x, int y) {
+static void render_sprite(RuckSackImage * sprite, int alpha, ScreenCoord screen_location) {
     SDL_Rect source_rect;
     source_rect.x = sprite->x;
     source_rect.y = sprite->y;
@@ -154,8 +163,8 @@ static void render_sprite(RuckSackImage * sprite, int alpha, int x, int y) {
     source_rect.h = sprite->height;
 
     SDL_Rect dest_rect;
-    dest_rect.x = x;
-    dest_rect.y = y;
+    dest_rect.x = screen_location.x;
+    dest_rect.y = screen_location.y;
     dest_rect.w = sprite->width;
     dest_rect.h = sprite->height;
 
@@ -198,7 +207,7 @@ void render() {
     set_color(black);
     SDL_RenderClear(renderer);
 
-    render_sprite(man_stand_image, 0xff, you.bounds.postion.x, you.bounds.postion.y);
+    render_sprite(man_stand_image, 0xff, to_screen(you.bounds.postion));
     render_text(version_string, 0, window_height - 17);
     render_text(get_debug_string(), 0, window_height - 17 * 2);
 
