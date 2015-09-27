@@ -4,6 +4,7 @@
 #include "resources.hpp"
 #include "load_image.hpp"
 #include "string.hpp"
+#include "input.hpp"
 
 #include <rucksack/rucksack.h>
 #include <SDL.h>
@@ -44,7 +45,7 @@ void display_init() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
         panic("unable to init SDL");
 
-    window = SDL_CreateWindow("Legend of Swarkland", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
+    window = SDL_CreateWindow("Prismoid", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
     if (window == nullptr)
         panic("window create failed");
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -122,13 +123,21 @@ void delay_until_next_frame() {
     elapsed_time = (int)(current_time - last_display_time);
     last_display_time = current_time;
 }
-static String get_fps_string() {
+static String get_debug_string() {
     String result = new_string();
     result->append("fps: ");
     if (elapsed_time != 0) {
         int fps = 1000 / (int)elapsed_time;
         result->format("%d", fps);
+    } else {
+        result->append('?');
     }
+
+    result->format("  input: %s%s%s%s",
+        input_state[INPUT_UP]    ? "1" : "0",
+        input_state[INPUT_LEFT]  ? "1" : "0",
+        input_state[INPUT_DOWN]  ? "1" : "0",
+        input_state[INPUT_RIGHT] ? "1" : "0");
     return result;
 }
 
@@ -189,8 +198,8 @@ void render() {
     SDL_RenderClear(renderer);
 
     render_sprite(man_stand_image, 0xff, 100, 100);
-    render_text(version_string, 200, 200);
-    render_text(get_fps_string(), 0, 200);
+    render_text(version_string, 0, window_height - 17);
+    render_text(get_debug_string(), 0, window_height - 17 * 2);
 
     SDL_RenderPresent(renderer);
 }
