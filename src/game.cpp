@@ -6,9 +6,11 @@ Entity you;
 List<Rect> walls;
 
 void game_init() {
+    you.bounds.position.x = 16000;
     you.bounds.size = {24000, 85000};
 
     walls.append(Rect{{0, 100000}, {32000, 32000}});
+    walls.append(Rect{{33000, 99000}, {32000, 32000}});
 }
 
 // return iff there is an impact
@@ -45,15 +47,32 @@ void run_the_game() {
     // collisions
     if (you.velocity.y > 0) {
         EdgeH moving_edge = get_bottom_edge(you.bounds);
+        int64_t closest_distance_to_impact;
+        List<int> closest_wall_indexes;
         for (int i = 0; i < walls.length(); i++) {
             int64_t distance_to_impact;
             int64_t _unused; // TODO: hardcoded
             if (!do_collision(moving_edge, you.velocity, &distance_to_impact, get_top_edge(walls[i]), Coord{0, 0}, &_unused))
                 continue;
-            // TODO: compare multiple collisions and pick the ones that are closest
-            you.bounds.position.y += distance_to_impact;
+            if (closest_wall_indexes.length() == 0) {
+                // found an impact
+                closest_distance_to_impact = distance_to_impact;
+                closest_wall_indexes.append(i);
+            } else if (distance_to_impact < closest_distance_to_impact) {
+                // found a better impact
+                closest_distance_to_impact = distance_to_impact;
+                closest_wall_indexes.clear();
+                closest_wall_indexes.append(i);
+            } else if (distance_to_impact == closest_distance_to_impact) {
+                // found a tied impact
+                closest_wall_indexes.append(i);
+            } else {
+                // too far away. don't care.
+            }
+        }
+        if (closest_wall_indexes.length() > 0) {
+            you.bounds.position.y += closest_distance_to_impact;
             you.velocity.y = 0;
-            break;
         }
     }
     // TODO: other directions
