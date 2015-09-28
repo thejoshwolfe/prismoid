@@ -98,11 +98,24 @@ static inline int sign(T value) {
         return 0;
 }
 template <typename T>
+static constexpr T abs(T value) {
+    return value < 0 ? -value : value;
+}
+template <typename T>
 static inline T euclidean_mod(T a, T base) {
     if (a < 0)
         return (a % base + base) % base;
     else
         return a % base;
+}
+
+template <typename T>
+static inline void sort_pair(T * a, T * b) {
+    if (*b < *a) {
+        T tmp = *a;
+        *a = *b;
+        *b = tmp;
+    }
 }
 
 #endif

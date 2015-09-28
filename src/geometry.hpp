@@ -43,7 +43,9 @@ static constexpr EdgeH get_bottom_edge(const Rect & rect) {
 }
 
 static inline bool is_line_segment_overlap(int64_t start1, int64_t end1, int64_t start2, int64_t end2) {
-    return sign(start1 - start2) != sign(end1 - end2);
+    sort_pair(&start1, &end1);
+    sort_pair(&start2, &end2);
+    return sign(start1 - end2) != sign(end1 - start2);
 }
 
 #endif

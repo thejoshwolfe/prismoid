@@ -1,5 +1,3 @@
-import re
-
 def value_matcher(value):
   if value.type.name in ("String", "Reference<StringImpl>"): return StringPrinter(value)
   if value.type.tag == "StringImpl": return StringImplPrinter(value)
