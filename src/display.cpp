@@ -13,8 +13,9 @@
 
 static const int window_width = 400;
 static const int window_height = 400;
-static const SDL_Color black = {0x00, 0x00, 0x00, 0xff};
-static const SDL_Color white = {0xff, 0xff, 0xff, 0xff};
+static const SDL_Color black      = {0x00, 0x00, 0x00, 0xff};
+static const SDL_Color dark_green = {0x00, 0x88, 0x00, 0xff};
+static const SDL_Color white      = {0xff, 0xff, 0xff, 0xff};
 
 static SDL_Window * window;
 static SDL_Texture * sprite_sheet_texture;
@@ -31,13 +32,18 @@ static unsigned char * font_buffer;
 static SDL_RWops * font_rw_ops;
 static String version_string = new_string();
 
-struct ScreenCoord {
-    int x; // pixels
-    int y;
-};
-
-ScreenCoord to_screen(const Coord & coord) {
-    return ScreenCoord{(int)(coord.x / 1000), (int)(coord.y / 1000)};
+SDL_Point to_screen(const Coord & coord) {
+    return SDL_Point{(int)(coord.x / 1000), (int)(coord.y / 1000)};
+}
+SDL_Rect to_screen(const Rect & rect) {
+    SDL_Point position = to_screen(rect.position);
+    SDL_Point size = to_screen(rect.size);
+    SDL_Rect result;
+    result.x = position.x;
+    result.y = position.y;
+    result.w = size.x;
+    result.h = size.y;
+    return result;
 }
 
 static RuckSackImage * find_image(RuckSackImage ** spritesheet_images, long image_count, const char * name) {
@@ -155,7 +161,7 @@ static void set_color(SDL_Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-static void render_sprite(RuckSackImage * sprite, int alpha, ScreenCoord screen_location) {
+static void render_sprite(RuckSackImage * sprite, int alpha, SDL_Point screen_location) {
     SDL_Rect source_rect;
     source_rect.x = sprite->x;
     source_rect.y = sprite->y;
@@ -207,7 +213,13 @@ void render() {
     set_color(black);
     SDL_RenderClear(renderer);
 
-    render_sprite(man_stand_image, 0xff, to_screen(you.bounds.postion));
+    set_color(dark_green);
+    for (int i = 0; i < walls.length(); i++) {
+        SDL_Rect rect = to_screen(walls[i]);
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+    render_sprite(man_stand_image, 0xff, to_screen(you.bounds.position));
     render_text(version_string, 0, window_height - 17);
     render_text(get_debug_string(), 0, window_height - 17 * 2);
 

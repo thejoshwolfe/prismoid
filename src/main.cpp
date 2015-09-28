@@ -5,6 +5,7 @@
 
 int main() {
     display_init();
+    game_init();
 
     while (!request_shutdown) {
         read_input();
