@@ -16,30 +16,38 @@ static inline T gcd(T a, T b) {
     }
 }
 
-class rat64 {
+// construct with rat64::normalized(numerator, denominator)
+// rather than rat64{numerator, denominator}
+// unless you're sure it's already normalized,
+// such as rat64{x, 1}.
+struct rat64 {
 public:
     int64_t numerator;
     int64_t denominator;
-    rat64() {}
-    rat64(int64_t numerator, int64_t denominator) :
-        numerator(numerator), denominator(denominator) {
-        normalize();
-    }
 
-private:
-    void normalize() {
+    static rat64 normalized(int64_t numerator, int64_t denominator) {
         // infinity, -infinity, NaN
-        if (denominator == 0) { numerator = sign(numerator); return; }
+        if (denominator == 0) {
+            numerator = sign(numerator);
+            return {numerator, denominator};
+        }
         // 0
-        if (numerator == 0) { denominator = 1; return; }
+        if (numerator == 0) {
+            denominator = 1;
+            return {numerator, denominator};
+        }
         // denominator must be positive
-        if (denominator < 0) { numerator = -numerator; denominator = -denominator; }
+        if (denominator < 0) {
+            numerator = -numerator;
+            denominator = -denominator;
+        }
         // reduce the fraction
         int64_t divisor = gcd(abs(numerator), denominator);
         if (divisor != 1) {
             numerator /= divisor;
             denominator /= divisor;
         }
+        return {numerator, denominator};
     }
 };
 

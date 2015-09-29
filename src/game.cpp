@@ -7,11 +7,12 @@ Entity you;
 List<Rect> walls;
 
 void game_init() {
-    you.bounds.position.x = -1000;
+    you.bounds.position = {33000, 0};
     you.bounds.size = {24000, 85000};
-    you.velocity = {1000, 3000};
+    you.velocity = {-1000, 1000};
 
-    walls.append(Rect{{24000, 85000}, {32000, 32000}});
+    walls.append(Rect{{32000, 86000}, {32000, 32000}});
+    walls.append(Rect{{0, 86000}, {32000, 32000}});
 }
 
 struct Collision {
@@ -39,7 +40,7 @@ static bool do_collision_vertical(const EdgeH & edge1, const Coord & velocity1, 
     if (!is_line_segment_overlap(y1_start, y1_end, y2_start, y2_end))
         return false;
     // TODO: hard coded to assume only object 1 is moving
-    rat64 time_to_impact = rat64(y2_start - y1_start, y1_end - y1_start);
+    rat64 time_to_impact = rat64::normalized(y2_start - y1_start, y1_end - y1_start);
 
     // where will the x's be at the time of impact?
     int64_t final_position_x1 = edge1.position.x + velocity1.x * time_to_impact.numerator / time_to_impact.denominator;
@@ -62,7 +63,7 @@ static bool do_collision_horizontal(const EdgeV & edge1, const Coord & velocity1
     if (!is_line_segment_overlap(x1_start, x1_end, x2_start, x2_end))
         return false;
     // TODO: hard coded to assume only object 1 is moving
-    rat64 time_to_impact = rat64(x2_start - x1_start, x1_end - x1_start);
+    rat64 time_to_impact = rat64::normalized(x2_start - x1_start, x1_end - x1_start);
 
     // where will the y's be at the time of impact?
     int64_t final_position_y1 = edge1.position.y + velocity1.y * time_to_impact.numerator / time_to_impact.denominator;
