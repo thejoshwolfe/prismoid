@@ -20,16 +20,10 @@ class rat64 {
 public:
     int64_t numerator;
     int64_t denominator;
-    rat64(int64_t numerator = 0) :
-        numerator(numerator), denominator(1) {
-    }
+    rat64() {}
     rat64(int64_t numerator, int64_t denominator) :
         numerator(numerator), denominator(denominator) {
         normalize();
-    }
-
-    rat64 inverted() const {
-        return rat64(denominator, numerator);
     }
 
 private:
