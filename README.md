@@ -91,3 +91,4 @@ Default indentation for wrapped lines: 1.
 Project -> Properties -> C/C++ General -> Code Analysis.
 Use project settings.
 Uncheck Potential Programming Problems/No Return.
+Uncheck Potential Programming Problems/Class members should be properly initialized.

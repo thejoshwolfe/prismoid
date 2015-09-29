@@ -80,6 +80,22 @@ static bool do_collision_horizontal(const EdgeV & edge1, const Coord & velocity1
 
 static void do_collisions() {
     List<Collision> collisions;
+    if (you.velocity.y < 0) {
+        EdgeH moving_edge = get_top_edge(you.bounds);
+        for (int i = 0; i < walls.length(); i++) {
+            rat64 time_to_impact;
+            if (do_collision_vertical(moving_edge, you.velocity, get_bottom_edge(walls[i]), Coord{0, 0}, &time_to_impact))
+                collisions.append(Collision{time_to_impact, i, Collision::UP});
+        }
+    }
+    if (you.velocity.x < 0) {
+        EdgeV moving_edge = get_left_edge(you.bounds);
+        for (int i = 0; i < walls.length(); i++) {
+            rat64 time_to_impact;
+            if (do_collision_horizontal(moving_edge, you.velocity, get_right_edge(walls[i]), Coord{0, 0}, &time_to_impact))
+                collisions.append(Collision{time_to_impact, i, Collision::LEFT});
+        }
+    }
     if (you.velocity.y > 0) {
         EdgeH moving_edge = get_bottom_edge(you.bounds);
         for (int i = 0; i < walls.length(); i++) {
@@ -90,8 +106,6 @@ static void do_collisions() {
     }
     if (you.velocity.x > 0) {
         EdgeV moving_edge = get_right_edge(you.bounds);
-        rat64 soonest_time_to_impact;
-        List<int> closest_wall_indexes;
         for (int i = 0; i < walls.length(); i++) {
             rat64 time_to_impact;
             if (do_collision_horizontal(moving_edge, you.velocity, get_left_edge(walls[i]), Coord{0, 0}, &time_to_impact))
