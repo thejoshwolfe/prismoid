@@ -4,9 +4,7 @@
 #include "list.hpp"
 #include "entity.hpp"
 
-extern Entity you;
-
-extern List<Rect> walls;
+extern List<Entity> entities;
 
 void game_init();
 void run_the_game();

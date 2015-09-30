@@ -3,16 +3,22 @@
 #include "input.hpp"
 #include "rat64.hpp"
 
-Entity you;
-List<Rect> walls;
+List<Entity> entities;
 
 void game_init() {
-    you.bounds.position = {33000, 0};
-    you.bounds.size = {24000, 85000};
-    you.velocity = {-1000, 1000};
+    entities.append({ Entity::YOU,
+        {{33000, 0}, {24000, 85000}},
+        {-1000, 1000},
+    });
 
-    walls.append(Rect{{32000, 86000}, {32000, 32000}});
-    walls.append(Rect{{0, 86000}, {32000, 32000}});
+    entities.append({ Entity::WALL,
+        {{32000, 86000}, {32000, 32000}},
+        {0, 0},
+    });
+    entities.append({ Entity::WALL,
+        {{0, 86000}, {32000, 32000}},
+        {0, 0},
+    });
 }
 
 struct Collision {
@@ -24,8 +30,9 @@ struct Collision {
     };
 
     rat64 time;
-    int wall_index;
     Orientation orientation;
+    int entity_index1;
+    int entity_index2;
 };
 int compare_collisions(Collision a, Collision b) {
     return operator_compare(a.time, b.time);
@@ -78,54 +85,65 @@ static bool do_collision_horizontal(const EdgeV & edge1, const Coord & velocity1
     *out_time_to_impact = time_to_impact;
     return true;
 }
+static void get_collisions(int entity_index1, int entity_index2, List<Collision> * collisions) {
+    const Entity & entity1 = entities[entity_index1];
+    const Entity & entity2 = entities[entity_index2];
+    Coord relative_velocity = entity1.velocity - entity2.velocity;
+    if (relative_velocity.y < 0) {
+        EdgeH edge1 = get_top_edge(entity1.bounds);
+        EdgeH edge2 = get_bottom_edge(entity2.bounds);
+        rat64 time_to_impact;
+        if (do_collision_vertical(edge1, entity1.velocity, edge2, entity2.velocity, &time_to_impact))
+            collisions->append(Collision{time_to_impact, Collision::UP, entity_index1, entity_index2});
+    }
+    if (relative_velocity.x < 0) {
+        EdgeV edge1 = get_left_edge(entity1.bounds);
+        EdgeV edge2 = get_right_edge(entity2.bounds);
+        rat64 time_to_impact;
+        if (do_collision_horizontal(edge1, entity1.velocity, edge2, entity2.velocity, &time_to_impact))
+            collisions->append(Collision{time_to_impact, Collision::LEFT, entity_index1, entity_index2});
+    }
+    if (relative_velocity.y > 0) {
+        EdgeH edge1 = get_bottom_edge(entity1.bounds);
+        EdgeH edge2 = get_top_edge(entity2.bounds);
+        rat64 time_to_impact;
+        if (do_collision_vertical(edge1, entity1.velocity, edge2, entity2.velocity, &time_to_impact))
+            collisions->append(Collision{time_to_impact, Collision::DOWN, entity_index1, entity_index2});
+    }
+    if (relative_velocity.x > 0) {
+        EdgeV edge1 = get_right_edge(entity1.bounds);
+        EdgeV edge2 = get_left_edge(entity2.bounds);
+        rat64 time_to_impact;
+        if (do_collision_horizontal(edge1, entity1.velocity, edge2, entity2.velocity, &time_to_impact))
+            collisions->append(Collision{time_to_impact, Collision::RIGHT, entity_index1, entity_index2});
+    }
+}
 
 static void do_collisions() {
     List<Collision> collisions;
-    if (you.velocity.y < 0) {
-        EdgeH moving_edge = get_top_edge(you.bounds);
-        for (int i = 0; i < walls.length(); i++) {
-            rat64 time_to_impact;
-            if (do_collision_vertical(moving_edge, you.velocity, get_bottom_edge(walls[i]), Coord{0, 0}, &time_to_impact))
-                collisions.append(Collision{time_to_impact, i, Collision::UP});
+    for (int i = 0; i < entities.length(); i++) {
+        const Entity & entity1 = entities[i];
+        if (entity1.type == Entity::WALL) continue;
+        for (int j = 0; j < entities.length(); j++) {
+            if (i == j) continue;
+            get_collisions(i, j, &collisions);
         }
     }
-    if (you.velocity.x < 0) {
-        EdgeV moving_edge = get_left_edge(you.bounds);
-        for (int i = 0; i < walls.length(); i++) {
-            rat64 time_to_impact;
-            if (do_collision_horizontal(moving_edge, you.velocity, get_right_edge(walls[i]), Coord{0, 0}, &time_to_impact))
-                collisions.append(Collision{time_to_impact, i, Collision::LEFT});
-        }
-    }
-    if (you.velocity.y > 0) {
-        EdgeH moving_edge = get_bottom_edge(you.bounds);
-        for (int i = 0; i < walls.length(); i++) {
-            rat64 time_to_impact;
-            if (do_collision_vertical(moving_edge, you.velocity, get_top_edge(walls[i]), Coord{0, 0}, &time_to_impact))
-                collisions.append(Collision{time_to_impact, i, Collision::DOWN});
-        }
-    }
-    if (you.velocity.x > 0) {
-        EdgeV moving_edge = get_right_edge(you.bounds);
-        for (int i = 0; i < walls.length(); i++) {
-            rat64 time_to_impact;
-            if (do_collision_horizontal(moving_edge, you.velocity, get_left_edge(walls[i]), Coord{0, 0}, &time_to_impact))
-                collisions.append(Collision{time_to_impact, i, Collision::RIGHT});
-        }
-    }
+
     sort<Collision, compare_collisions>(collisions.raw(), collisions.length());
     if (collisions.length() > 0) {
         Collision collision = collisions[0];
+        Entity * entity = &entities[collision.entity_index1];
         switch (collision.orientation) {
             case Collision::UP:
             case Collision::DOWN:
-                you.bounds.position.y += you.velocity.y * collision.time.numerator / collision.time.denominator;
-                you.velocity.y = 0;
+                entity->bounds.position.y += entity->velocity.y * collision.time.numerator / collision.time.denominator;
+                entity->velocity.y = 0;
                 break;
             case Collision::LEFT:
             case Collision::RIGHT:
-                you.bounds.position.x += you.velocity.x * collision.time.numerator / collision.time.denominator;
-                you.velocity.x = 0;
+                entity->bounds.position.x += entity->velocity.x * collision.time.numerator / collision.time.denominator;
+                entity->velocity.x = 0;
                 break;
             default: panic("orientation");
         }
@@ -142,10 +160,13 @@ void run_the_game() {
         acceleration.y += 100;
     if (input_state[INPUT_RIGHT])
         acceleration.x += 100;
-
-    you.velocity += acceleration;
+    // assume you is always 0
+    entities[0].velocity += acceleration;
 
     do_collisions();
 
-    you.bounds.position += you.velocity;
+    for (int i = 0; i < entities.length(); i++) {
+        Entity * entity = &entities[i];
+        entity->bounds.position += entity->velocity;
+    }
 }

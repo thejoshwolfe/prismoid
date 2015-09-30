@@ -214,12 +214,16 @@ void render() {
     SDL_RenderClear(renderer);
 
     set_color(dark_green);
-    for (int i = 0; i < walls.length(); i++) {
-        SDL_Rect rect = to_screen(walls[i]);
-        SDL_RenderFillRect(renderer, &rect);
+    for (int i = 0; i < entities.length(); i++) {
+        Entity * entity = &entities[i];
+        if (entity->type == Entity::WALL) {
+            SDL_Rect rect = to_screen(entity->bounds);
+            SDL_RenderFillRect(renderer, &rect);
+        } else if (entity->type == Entity::YOU) {
+            render_sprite(man_stand_image, 0xff, to_screen(entity->bounds.position));
+        }
     }
 
-    render_sprite(man_stand_image, 0xff, to_screen(you.bounds.position));
     render_text(version_string, 0, window_height - 17);
     render_text(get_debug_string(), 0, window_height - 17 * 2);
 
