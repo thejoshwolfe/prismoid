@@ -49,6 +49,10 @@ public:
         }
         return {numerator, denominator};
     }
+
+    static constexpr rat64 nan() {
+        return {0,0};
+    }
 };
 
 static constexpr bool operator==(const rat64 & a, const rat64 & b) {
@@ -58,10 +62,14 @@ static constexpr bool operator!=(const rat64 & a, const rat64 & b) {
     return !(a == b);
 }
 
+// these comparison operators work intuitively for infinities, but not for nan.
 static constexpr bool operator<(const rat64 & a, const rat64 & b) {
     // TODO: watch out for overflow
     return a.numerator * b.denominator < b.numerator * a.denominator;
 }
+static constexpr bool operator> (const rat64 & a, const rat64 & b) { return   b < a;  }
+static constexpr bool operator<=(const rat64 & a, const rat64 & b) { return !(b < a); }
+static constexpr bool operator>=(const rat64 & a, const rat64 & b) { return !(a < b); }
 
 DEFINE_GDB_PY_SCRIPT("debug-scripts/rat64.py")
 
