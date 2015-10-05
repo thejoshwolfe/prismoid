@@ -109,14 +109,6 @@ static inline T euclidean_mod(T a, T base) {
         return a % base;
 }
 
-template <typename T>
-static inline void sort_pair(T * a, T * b) {
-    if (*b < *a) {
-        T tmp = *a;
-        *a = *b;
-        *b = tmp;
-    }
-}
 template<typename T, int(*Comparator)(T, T)>
 static inline void sort(T * in_place_list, int size) {
     // insertion sort, cuz whatever.

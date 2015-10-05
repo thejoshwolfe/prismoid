@@ -7,8 +7,8 @@ List<Entity> entities;
 
 void game_init() {
     entities.append({ Entity::YOU,
-        {{32100, 1000}, {24000, 85000}},
-        {-100, 100},
+        {{32000, 1000}, {24000, 85000}},
+        {-100, 0},
     });
 
     entities.append({ Entity::WALL,
@@ -58,6 +58,19 @@ static inline int compare_collisions(Collision a, Collision b) {
     if ((result = operator_compare(a.time, b.time)) != 0) return result;
     if ((result = operator_compare(get_orientation_score(a.orientation), get_orientation_score(b.orientation))) != 0) return result;
     return 0;
+}
+
+static inline int get_line_segment_overlap(int64_t start1, int64_t end1, int64_t start2, int64_t end2) {
+    // start must not be greater than end.
+    // returns:
+    //  -2: miss to the left/top
+    //  -1: hit left/top corner
+    //   0: hit edge-to-edge
+    //   1: hit right/bottom corner
+    //   2: miss to the right/bottom
+    int alignment1 = sign(start1 - end2);
+    int alignment2 = sign(end1 - start2);
+    return alignment1 + alignment2;
 }
 
 static void get_collisions(int entity_index1, int entity_index2, List<Collision> * collisions) {
@@ -110,27 +123,41 @@ static void get_collisions(int entity_index1, int entity_index2, List<Collision>
     // bounds check the other axis to distinguish between hitting and missing the target
     if (vertical_orientation != 0) {
         int64_t comparative_position_x1 = vertical_contact_edge1.position.x + relative_velocity.x * vertical_time.numerator / vertical_time.denominator;
-        if (!is_line_segment_overlap(comparative_position_x1,           comparative_position_x1           + vertical_contact_edge1.size,
-                                     vertical_contact_edge2.position.x, vertical_contact_edge2.position.x + vertical_contact_edge2.size)) {
-            // miss
-            vertical_orientation = 0;
+        int overlap = get_line_segment_overlap(
+                comparative_position_x1,           comparative_position_x1           + vertical_contact_edge1.size,
+                vertical_contact_edge2.position.x, vertical_contact_edge2.position.x + vertical_contact_edge2.size);
+        switch (overlap) {
+            case -1: // target's left corner
+                vertical_orientation |= Collision::RIGHT;
+                break;
+            case  0: // nailed it
+                break;
+            case  1: // target's right corner
+                vertical_orientation |= Collision::LEFT;
+                break;
+            default: // miss
+                vertical_orientation = 0;
+                break;
         }
     }
     if (horizontal_orientation != 0) {
         int64_t comparative_position_y1 = horizontal_contact_edge1.position.y + relative_velocity.y * horizontal_time.numerator / horizontal_time.denominator;
-        if (!is_line_segment_overlap(comparative_position_y1,             comparative_position_y1             + horizontal_contact_edge1.size,
-                                     horizontal_contact_edge2.position.y, horizontal_contact_edge2.position.y + horizontal_contact_edge2.size)) {
-            // miss
-            horizontal_orientation = 0;
+        int overlap = get_line_segment_overlap(
+                comparative_position_y1,             comparative_position_y1             + horizontal_contact_edge1.size,
+                horizontal_contact_edge2.position.y, horizontal_contact_edge2.position.y + horizontal_contact_edge2.size);
+        switch (overlap) {
+            case -1: // target's top corner
+                horizontal_orientation |= Collision::DOWN;
+                break;
+            case  0: // nailed it
+                break;
+            case  1: // target's bottom corner
+                horizontal_orientation |= Collision::UP;
+                break;
+            default: // miss
+                horizontal_orientation = 0;
+                break;
         }
-    }
-
-    if (vertical_orientation != 0 && horizontal_orientation != 0) {
-        // pick the closer time
-        if (vertical_time < horizontal_time)
-            horizontal_orientation = 0;
-        else if (vertical_time > horizontal_time)
-            vertical_orientation = 0;
     }
 
     rat64 the_time_to_impact;

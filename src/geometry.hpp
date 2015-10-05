@@ -52,10 +52,4 @@ static constexpr EdgeV get_right_edge(const Rect & rect) {
     return EdgeV{ {rect.position.x + rect.size.x, rect.position.y}, rect.size.y};
 }
 
-static inline bool is_line_segment_overlap(int64_t start1, int64_t end1, int64_t start2, int64_t end2) {
-    sort_pair(&start1, &end1);
-    sort_pair(&start2, &end2);
-    return sign(start1 - end2) != sign(end1 - start2);
-}
-
 #endif
