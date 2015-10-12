@@ -7,16 +7,16 @@ List<Entity> entities;
 
 void game_init() {
     entities.append({ Entity::YOU,
-        {{32000, 1000}, {24000, 85000}},
-        {-100, 0},
+        {{1000, -86000}, {24000, 85000}},
+        {-1100, 3000},
     });
 
     entities.append({ Entity::WALL,
-        {{0, 86000}, {32000, 32000}},
+        {{-32000, -85000 - 31000}, {32000, 32000}},
         {0, 0},
     });
     entities.append({ Entity::WALL,
-        {{32000, 86000}, {32000, 32000}},
+        {{24000, 0}, {32000, 32000}},
         {0, 0},
     });
 }
@@ -172,7 +172,8 @@ static void get_collisions(int entity_index1, int entity_index2, List<Collision>
 }
 
 static void do_collisions() {
-    while (true) {
+    rat64 time_left_this_tick = {1,1};
+    while (time_left_this_tick > rat64{0,1}) {
         List<Collision> collisions;
         for (int i = 0; i < entities.length(); i++) {
             const Entity & entity1 = entities[i];
@@ -187,9 +188,9 @@ static void do_collisions() {
         rat64 time_of_impact_that_matters = rat64::nan();
         for (int i = 0; i < collisions.length(); i++) {
             Collision collision = collisions[i];
-            if (time_of_impact_that_matters != rat64::nan()) {
-                if (collision.time != time_of_impact_that_matters)
-                    goto start_over;
+            if (time_of_impact_that_matters != rat64::nan() && time_of_impact_that_matters != collision.time) {
+                time_left_this_tick -= time_of_impact_that_matters;
+                goto start_over;
             }
             Entity * entity = &entities[collision.entity_index1];
             // try to turn diagonal collisions into orthogonal collisions
@@ -254,6 +255,11 @@ static void do_collisions() {
         break;
         start_over:;
     }
+
+    for (int i = 0; i < entities.length(); i++) {
+        Entity * entity = &entities[i];
+        entity->bounds.position += entity->velocity;
+    }
 }
 
 void run_the_game() {
@@ -270,9 +276,4 @@ void run_the_game() {
     entities[0].velocity += acceleration;
 
     do_collisions();
-
-    for (int i = 0; i < entities.length(); i++) {
-        Entity * entity = &entities[i];
-        entity->bounds.position += entity->velocity;
-    }
 }

@@ -11,6 +11,7 @@ struct Entity {
 
     Type type;
     Rect bounds;
+    // TODO: this is wasted space for static entities:
     Coord velocity;
 };
 

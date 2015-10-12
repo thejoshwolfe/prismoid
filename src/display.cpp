@@ -32,12 +32,18 @@ static unsigned char * font_buffer;
 static SDL_RWops * font_rw_ops;
 static String version_string = new_string();
 
-SDL_Point to_screen(const Coord & coord) {
+
+static inline SDL_Point scale_to_screen(const Coord & coord) {
     return SDL_Point{(int)(coord.x / 1000), (int)(coord.y / 1000)};
 }
-SDL_Rect to_screen(const Rect & rect) {
+
+static inline SDL_Point to_screen(const Coord & coord) {
+    SDL_Point scaled = scale_to_screen(coord);
+    return SDL_Point{scaled.x + window_width/2, scaled.y + window_height/2};
+}
+static inline SDL_Rect to_screen(const Rect & rect) {
     SDL_Point position = to_screen(rect.position);
-    SDL_Point size = to_screen(rect.size);
+    SDL_Point size = scale_to_screen(rect.size);
     SDL_Rect result;
     result.x = position.x;
     result.y = position.y;

@@ -21,7 +21,6 @@ static inline T gcd(T a, T b) {
 // unless you're sure it's already normalized,
 // such as rat64{x, 1}.
 struct rat64 {
-public:
     int64_t numerator;
     int64_t denominator;
 
@@ -70,6 +69,16 @@ static constexpr bool operator<(const rat64 & a, const rat64 & b) {
 static constexpr bool operator> (const rat64 & a, const rat64 & b) { return   b < a;  }
 static constexpr bool operator<=(const rat64 & a, const rat64 & b) { return !(b < a); }
 static constexpr bool operator>=(const rat64 & a, const rat64 & b) { return !(a < b); }
+
+// TODO: watch out for overflow
+static inline rat64 operator+(const rat64 & a, const rat64 & b) {
+    return rat64::normalized(a.numerator * b.denominator + b.numerator * a.denominator, a.denominator * b.denominator);
+}
+static inline rat64 operator-(const rat64 & a, const rat64 & b) {
+    return rat64::normalized(a.numerator * b.denominator - b.numerator * a.denominator, a.denominator * b.denominator);
+}
+static inline void operator+=(rat64 & a, const rat64 & b) { a = a + b; }
+static inline void operator-=(rat64 & a, const rat64 & b) { a = a - b; }
 
 DEFINE_GDB_PY_SCRIPT("debug-scripts/rat64.py")
 
