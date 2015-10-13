@@ -215,13 +215,13 @@ static void render_text(String string, int x, int y) {
     SDL_DestroyTexture(texture);
 }
 
-void render() {
+void render(List<Entity> * entities) {
     set_color(black);
     SDL_RenderClear(renderer);
 
     set_color(dark_green);
-    for (int i = 0; i < entities.length(); i++) {
-        Entity * entity = &entities[i];
+    for (int i = 0; i < entities->length(); i++) {
+        Entity * entity = &(*entities)[i];
         if (entity->type == Entity::WALL) {
             SDL_Rect rect = to_screen(entity->bounds);
             SDL_RenderFillRect(renderer, &rect);

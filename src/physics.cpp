@@ -3,24 +3,6 @@
 #include "input.hpp"
 #include "rat64.hpp"
 
-List<Entity> entities;
-
-void game_init() {
-    entities.append({ Entity::YOU,
-        {{10000, -85000 - 32000}, {24000, 85000}},
-        {(-10000 - 24000), 32000},
-    });
-
-    entities.append({ Entity::WALL,
-        {{-1000, 0}, {32000, 32000}},
-        {0, 0},
-    });
-    entities.append({ Entity::WALL,
-        {{4000, -3000}, {3000, 3000}},
-        {0, 0},
-    });
-}
-
 struct Collision {
     enum Orientation {
         UP    = 1,
@@ -73,9 +55,9 @@ static inline int get_line_segment_overlap(int64_t start1, int64_t end1, int64_t
     return alignment1 + alignment2;
 }
 
-static void get_collisions(int entity_index1, int entity_index2, List<Collision> * collisions, rat64 time_so_far) {
-    const Entity & entity1 = entities[entity_index1];
-    const Entity & entity2 = entities[entity_index2];
+static void get_collisions(List<Entity> * entities, int entity_index1, int entity_index2, List<Collision> * collisions, rat64 time_so_far) {
+    const Entity & entity1 = (*entities)[entity_index1];
+    const Entity & entity2 = (*entities)[entity_index2];
     // can you see the chalice in the following 8 lines of code?
     EdgeH top_edge1    =    get_top_edge(entity1.bounds);
     EdgeH top_edge2    =    get_top_edge(entity2.bounds);
@@ -186,16 +168,16 @@ static inline bool apply_collision_vertical(Entity * entity, const Collision & c
     return true;
 }
 
-static void do_collisions() {
+void step_physics(List<Entity> * entities) {
     rat64 time_so_far = {0,1};
     while (time_so_far < rat64{1,1}) {
         List<Collision> collisions;
-        for (int i = 0; i < entities.length(); i++) {
-            const Entity & entity1 = entities[i];
+        for (int i = 0; i < entities->length(); i++) {
+            const Entity & entity1 = (*entities)[i];
             if (entity1.type == Entity::WALL) continue;
-            for (int j = 0; j < entities.length(); j++) {
+            for (int j = 0; j < entities->length(); j++) {
                 if (i == j) continue;
-                get_collisions(i, j, &collisions, time_so_far);
+                get_collisions(entities, i, j, &collisions, time_so_far);
             }
         }
         sort<Collision, compare_collisions>(collisions.raw(), collisions.length());
@@ -208,14 +190,14 @@ static void do_collisions() {
                 // let's don't believe this and recalculate everything from scratch.
                 goto start_over;
             }
-            Entity * entity = &entities[collision.entity_index1];
+            Entity * entity = &(*entities)[collision.entity_index1];
             // try to turn diagonal collisions into orthogonal collisions
             switch (collision.orientation) {
                 case Collision::UP_LEFT:
                 case Collision::LEFT_DOWN:
                 case Collision::DOWN_RIGHT:
                 case Collision::RIGHT_UP: {
-                    Coord relative_velocity = entity->velocity - entities[collision.entity_index2].velocity;
+                    Coord relative_velocity = entity->velocity - (*entities)[collision.entity_index2].velocity;
                     int64_t magnitude_x = abs(relative_velocity.x);
                     int64_t magnitude_y = abs(relative_velocity.y);
                     if (magnitude_x > magnitude_y) {
@@ -262,24 +244,8 @@ static void do_collisions() {
         time_so_far = time_of_impact_that_matters;
     }
 
-    for (int i = 0; i < entities.length(); i++) {
-        Entity * entity = &entities[i];
+    for (int i = 0; i < entities->length(); i++) {
+        Entity * entity = &(*entities)[i];
         entity->bounds.position += entity->velocity;
     }
-}
-
-void run_the_game() {
-    Coord acceleration = {0, 0};
-    if (input_state[INPUT_UP])
-        acceleration.y -= 100;
-    if (input_state[INPUT_LEFT])
-        acceleration.x -= 100;
-    if (input_state[INPUT_DOWN])
-        acceleration.y += 100;
-    if (input_state[INPUT_RIGHT])
-        acceleration.x += 100;
-    // assume you is always 0
-    entities[0].velocity += acceleration;
-
-    do_collisions();
 }
