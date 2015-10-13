@@ -74,7 +74,7 @@ Project -> Properties -> C/C++ Build -> Behavior Tab.
 Uncheck "Stop on first build error".
 Check "Enable parallel build".
 Check "Build on resource save (Auto build)".
-Blank out the textboxes under "Make build target" that say "all".
+Update any textboxes under "Make build target" that say "all" to say "all test".
 
 Run -> Debug Configurations... -> C/C++ Application -> New launch configuration.
 Main Tab: Project -> Browse... -> select the one.

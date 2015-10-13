@@ -1,8 +1,6 @@
 #ifndef GEOMETRY_HPP
 #define GEOMETRY_HPP
 
-#include "util.hpp"
-
 #include <stdint.h>
 
 struct Coord {
