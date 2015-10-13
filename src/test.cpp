@@ -105,7 +105,7 @@ static void test_physics() {
     entities->clear();
     entities->append({ Entity::YOU,
         {{10000, -85000 - 32000}, {24000, 85000}},
-        {(-1000 - 2400), 32000},
+        {(-10000 - 24000), 32000},
     });
     entities->append({ Entity::WALL,
         {{-1000, 0}, {32000, 32000}},
@@ -123,4 +123,5 @@ static void test_physics() {
 
 int main() {
     test_physics();
+    return 0;
 }
