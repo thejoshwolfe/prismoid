@@ -73,7 +73,7 @@ static inline int get_line_segment_overlap(int64_t start1, int64_t end1, int64_t
     return alignment1 + alignment2;
 }
 
-static void get_collisions(int entity_index1, int entity_index2, List<Collision> * collisions) {
+static void get_collisions(int entity_index1, int entity_index2, List<Collision> * collisions, rat64 time_so_far) {
     const Entity & entity1 = entities[entity_index1];
     const Entity & entity2 = entities[entity_index2];
     // can you see the chalice in the following 8 lines of code?
@@ -115,10 +115,10 @@ static void get_collisions(int entity_index1, int entity_index2, List<Collision>
     EdgeV horizontal_contact_edge2;
     rat64 vertical_time;
     rat64 horizontal_time;
-    if (relative_velocity.y <= 0 && time_to_impact_top    >= rat64{0,1} && time_to_impact_top    <= rat64{1,1}) { vertical_orientation   = Collision::UP;      vertical_contact_edge1 =    top_edge1;   vertical_contact_edge2 = bottom_edge2; vertical_time   = time_to_impact_top;    }
-    if (relative_velocity.x <= 0 && time_to_impact_left   >= rat64{0,1} && time_to_impact_left   <= rat64{1,1}) { horizontal_orientation = Collision::LEFT;  horizontal_contact_edge1 =   left_edge1; horizontal_contact_edge2 =  right_edge2; horizontal_time = time_to_impact_left;   }
-    if (relative_velocity.y >= 0 && time_to_impact_bottom >= rat64{0,1} && time_to_impact_bottom <= rat64{1,1}) { vertical_orientation   = Collision::DOWN;    vertical_contact_edge1 = bottom_edge1;   vertical_contact_edge2 =    top_edge2; vertical_time   = time_to_impact_bottom; }
-    if (relative_velocity.x >= 0 && time_to_impact_right  >= rat64{0,1} && time_to_impact_right  <= rat64{1,1}) { horizontal_orientation = Collision::RIGHT; horizontal_contact_edge1 =  right_edge1; horizontal_contact_edge2 =   left_edge2; horizontal_time = time_to_impact_right;  }
+    if (relative_velocity.y <= 0 && time_to_impact_top    >= time_so_far && time_to_impact_top    <= rat64{1,1}) { vertical_orientation   = Collision::UP;      vertical_contact_edge1 =    top_edge1;   vertical_contact_edge2 = bottom_edge2; vertical_time   = time_to_impact_top;    }
+    if (relative_velocity.x <= 0 && time_to_impact_left   >= time_so_far && time_to_impact_left   <= rat64{1,1}) { horizontal_orientation = Collision::LEFT;  horizontal_contact_edge1 =   left_edge1; horizontal_contact_edge2 =  right_edge2; horizontal_time = time_to_impact_left;   }
+    if (relative_velocity.y >= 0 && time_to_impact_bottom >= time_so_far && time_to_impact_bottom <= rat64{1,1}) { vertical_orientation   = Collision::DOWN;    vertical_contact_edge1 = bottom_edge1;   vertical_contact_edge2 =    top_edge2; vertical_time   = time_to_impact_bottom; }
+    if (relative_velocity.x >= 0 && time_to_impact_right  >= time_so_far && time_to_impact_right  <= rat64{1,1}) { horizontal_orientation = Collision::RIGHT; horizontal_contact_edge1 =  right_edge1; horizontal_contact_edge2 =   left_edge2; horizontal_time = time_to_impact_right;  }
 
     // bounds check the other axis to distinguish between hitting and missing the target
     if (vertical_orientation != 0) {
@@ -187,15 +187,15 @@ static inline bool apply_collision_vertical(Entity * entity, const Collision & c
 }
 
 static void do_collisions() {
-    rat64 time_left_this_tick = {1,1};
-    while (time_left_this_tick > rat64{0,1}) {
+    rat64 time_so_far = {0,1};
+    while (time_so_far < rat64{1,1}) {
         List<Collision> collisions;
         for (int i = 0; i < entities.length(); i++) {
             const Entity & entity1 = entities[i];
             if (entity1.type == Entity::WALL) continue;
             for (int j = 0; j < entities.length(); j++) {
                 if (i == j) continue;
-                get_collisions(i, j, &collisions);
+                get_collisions(i, j, &collisions, time_so_far);
             }
         }
         sort<Collision, compare_collisions>(collisions.raw(), collisions.length());
@@ -204,7 +204,8 @@ static void do_collisions() {
         for (int i = 0; i < collisions.length(); i++) {
             Collision collision = collisions[i];
             if (time_of_impact_that_matters != rat64::nan() && time_of_impact_that_matters != collision.time) {
-                time_left_this_tick -= time_of_impact_that_matters;
+                // we thought we'd hit this later, but since we've already changed course earlier in this frame,
+                // let's don't believe this and recalculate everything from scratch.
                 goto start_over;
             }
             Entity * entity = &entities[collision.entity_index1];
@@ -258,6 +259,7 @@ static void do_collisions() {
             break;
         }
         start_over:;
+        time_so_far = time_of_impact_that_matters;
     }
 
     for (int i = 0; i < entities.length(); i++) {
