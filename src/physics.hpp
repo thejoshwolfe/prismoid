@@ -1,5 +1,5 @@
-#ifndef GAME_HPP
-#define GAME_HPP
+#ifndef PHYSICS_HPP
+#define PHYSICS_HPP
 
 #include "list.hpp"
 #include "entity.hpp"

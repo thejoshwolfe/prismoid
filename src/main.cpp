@@ -1,7 +1,7 @@
 
 #include "display.hpp"
 #include "input.hpp"
-#include "game.hpp"
+#include "physics.hpp"
 
 int main() {
     display_init();

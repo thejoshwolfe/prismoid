@@ -5,7 +5,7 @@
 #include "load_image.hpp"
 #include "string.hpp"
 #include "input.hpp"
-#include "game.hpp"
+#include "physics.hpp"
 
 #include <rucksack/rucksack.h>
 #include <SDL.h>
