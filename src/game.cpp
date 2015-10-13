@@ -7,16 +7,16 @@ List<Entity> entities;
 
 void game_init() {
     entities.append({ Entity::YOU,
-        {{1000, -86000}, {24000, 85000}},
-        {-1100, 3000},
+        {{10000, -85000 - 32000}, {24000, 85000}},
+        {(-10000 - 24000), 32000},
     });
 
     entities.append({ Entity::WALL,
-        {{-32000, -85000 - 31000}, {32000, 32000}},
+        {{-1000, 0}, {32000, 32000}},
         {0, 0},
     });
     entities.append({ Entity::WALL,
-        {{24000, 0}, {32000, 32000}},
+        {{4000, -3000}, {3000, 3000}},
         {0, 0},
     });
 }
@@ -171,6 +171,21 @@ static void get_collisions(int entity_index1, int entity_index2, List<Collision>
         collisions->append(Collision{the_time_to_impact, (Collision::Orientation)orientation, entity_index1, entity_index2});
 }
 
+static inline bool apply_collision_horizontal(Entity * entity, const Collision & collision) {
+    if (entity->velocity.x == 0)
+        return false;
+    entity->bounds.position.x += entity->velocity.x * collision.time.numerator / collision.time.denominator;
+    entity->velocity.x = 0;
+    return true;
+}
+static inline bool apply_collision_vertical(Entity * entity, const Collision & collision) {
+    if (entity->velocity.y == 0)
+        return false;
+    entity->bounds.position.y += entity->velocity.y * collision.time.numerator / collision.time.denominator;
+    entity->velocity.y = 0;
+    return true;
+}
+
 static void do_collisions() {
     rat64 time_left_this_tick = {1,1};
     while (time_left_this_tick > rat64{0,1}) {
@@ -218,41 +233,30 @@ static void do_collisions() {
             switch (collision.orientation) {
                 case Collision::UP:
                 case Collision::DOWN:
-                    if (entity->velocity.y != 0) {
-                        entity->bounds.position.y += entity->velocity.y * collision.time.numerator / collision.time.denominator;
-                        entity->velocity.y = 0;
+                    if (apply_collision_vertical(entity, collision))
                         time_of_impact_that_matters = collision.time;
-                    }
                     break;
                 case Collision::LEFT:
                 case Collision::RIGHT:
-                    if (entity->velocity.x != 0) {
-                        entity->bounds.position.x += entity->velocity.x * collision.time.numerator / collision.time.denominator;
-                        entity->velocity.x = 0;
+                    if (apply_collision_horizontal(entity, collision))
                         time_of_impact_that_matters = collision.time;
-                    }
                     break;
                 case Collision::UP_LEFT:
                 case Collision::LEFT_DOWN:
                 case Collision::DOWN_RIGHT:
-                case Collision::RIGHT_UP: {
-                    if (entity->velocity.y != 0) {
-                        entity->bounds.position.y += entity->velocity.y * collision.time.numerator / collision.time.denominator;
-                        entity->velocity.y = 0;
+                case Collision::RIGHT_UP:
+                    if (apply_collision_vertical(entity, collision))
                         time_of_impact_that_matters = collision.time;
-                    }
-                    if (entity->velocity.x != 0) {
-                        entity->bounds.position.x += entity->velocity.x * collision.time.numerator / collision.time.denominator;
-                        entity->velocity.x = 0;
+                    if (apply_collision_horizontal(entity, collision))
                         time_of_impact_that_matters = collision.time;
-                    }
                     break;
-                }
                 default: panic("orientation");
             }
         }
-        // all collisions resolved
-        break;
+        if (time_of_impact_that_matters == rat64::nan()) {
+            // all collisions resolved
+            break;
+        }
         start_over:;
     }
 
