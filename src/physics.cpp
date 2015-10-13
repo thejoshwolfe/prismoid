@@ -42,19 +42,6 @@ static inline int compare_collisions(Collision a, Collision b) {
     return 0;
 }
 
-static inline int get_line_segment_overlap(int64_t start1, int64_t end1, int64_t start2, int64_t end2) {
-    // start must not be greater than end.
-    // returns:
-    //  -2: miss to the left/top
-    //  -1: hit left/top corner
-    //   0: hit edge-to-edge
-    //   1: hit right/bottom corner
-    //   2: miss to the right/bottom
-    int alignment1 = sign(start1 - end2);
-    int alignment2 = sign(end1 - start2);
-    return alignment1 + alignment2;
-}
-
 static void get_collisions(List<Entity> * entities, int entity_index1, int entity_index2, List<Collision> * collisions, rat64 time_so_far) {
     const Entity & entity1 = (*entities)[entity_index1];
     const Entity & entity2 = (*entities)[entity_index2];

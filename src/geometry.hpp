@@ -50,4 +50,17 @@ static constexpr EdgeV get_right_edge(const Rect & rect) {
     return EdgeV{ {rect.position.x + rect.size.x, rect.position.y}, rect.size.y};
 }
 
+static inline int get_line_segment_overlap(int64_t start1, int64_t end1, int64_t start2, int64_t end2) {
+    // start must not be greater than end.
+    // returns:
+    //  -2: miss to the left/top
+    //  -1: hit left/top corner
+    //   0: hit edge-to-edge
+    //   1: hit right/bottom corner
+    //   2: miss to the right/bottom
+    int alignment1 = sign(start1 - end2);
+    int alignment2 = sign(end1 - start2);
+    return alignment1 + alignment2;
+}
+
 #endif
