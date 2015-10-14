@@ -34,6 +34,7 @@ static void assert_no_overlaps(List<Entity> * entities) {
 }
 static void test_physics() {
     List<Entity> entities;
+    List<Collision> collisions;
 
     // sliding over cracks in the sidewalk from a distance.
     entities.clear();
@@ -49,7 +50,7 @@ static void test_physics() {
         {{32000, 86000}, {32000, 32000}},
         {0, 0},
     });
-    step_physics(&entities);
+    step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving, but only in the x direction
     assert(entities[0].velocity.x < 0);
@@ -70,7 +71,7 @@ static void test_physics() {
         {{32000, 86000}, {32000, 32000}},
         {0, 0},
     });
-    step_physics(&entities);
+    step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving
     assert(entities[0].velocity.x < 0);
@@ -91,7 +92,7 @@ static void test_physics() {
         {{24000, 0}, {32000, 32000}},
         {0, 0},
     });
-    step_physics(&entities);
+    step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // not still moving left; banged head against surprise wall.
     assert(entities[0].velocity.x == 0);
@@ -112,7 +113,7 @@ static void test_physics() {
         {{4000, -3000}, {3000, 3000}},
         {0, 0},
     });
-    step_physics(&entities);
+    step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving left; not run into the tiny wall
     assert(entities[0].velocity.x < 0);

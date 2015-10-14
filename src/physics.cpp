@@ -3,23 +3,6 @@
 #include "input.hpp"
 #include "rat64.hpp"
 
-struct Collision {
-    enum Orientation {
-        UP    = 1,
-        LEFT  = 2,
-        DOWN  = 4,
-        RIGHT = 8,
-        UP_LEFT    = UP    | LEFT,
-        LEFT_DOWN  = LEFT  | DOWN,
-        DOWN_RIGHT = DOWN  | RIGHT,
-        RIGHT_UP   = RIGHT | UP,
-    };
-
-    rat64 time;
-    Orientation orientation;
-    int entity_index1;
-    int entity_index2;
-};
 static inline int get_orientation_score(Collision::Orientation orientation) {
     switch (orientation) {
         case Collision::UP:
@@ -69,11 +52,12 @@ static void get_collisions(List<Entity> * entities, int entity_index1, int entit
     rat64 time_to_impact_bottom = rat64::normalized(top_edge2.position.y - bottom_edge1.position.y, relative_velocity.y);
     rat64 time_to_impact_right  = rat64::normalized(left_edge2.position.x - right_edge1.position.x, relative_velocity.x);
 
-    // turn nan into 0. we may be touching the whole time, but let's just pick one time to make our math easier.
-    if (time_to_impact_top    == rat64::nan()) time_to_impact_top    = rat64{0,1};
-    if (time_to_impact_left   == rat64::nan()) time_to_impact_left   = rat64{0,1};
-    if (time_to_impact_bottom == rat64::nan()) time_to_impact_bottom = rat64{0,1};
-    if (time_to_impact_right  == rat64::nan()) time_to_impact_right  = rat64{0,1};
+    // turn nan into some arbitrary time.
+    // we may be touching the whole time, but let's just pick one time to make our math easier.
+    if (time_to_impact_top    == rat64::nan()) time_to_impact_top    = time_so_far;
+    if (time_to_impact_left   == rat64::nan()) time_to_impact_left   = time_so_far;
+    if (time_to_impact_bottom == rat64::nan()) time_to_impact_bottom = time_so_far;
+    if (time_to_impact_right  == rat64::nan()) time_to_impact_right  = time_so_far;
 
     // which edges are close enough (in one axis) to collide?
     int vertical_orientation = 0;
@@ -155,23 +139,23 @@ static inline bool apply_collision_vertical(Entity * entity, const Collision & c
     return true;
 }
 
-void step_physics(List<Entity> * entities) {
+void step_physics(List<Entity> * entities, List<Collision> * collisions) {
     rat64 time_so_far = {0,1};
     while (time_so_far < rat64{1,1}) {
-        List<Collision> collisions;
+        collisions->clear();
         for (int i = 0; i < entities->length(); i++) {
             const Entity & entity1 = (*entities)[i];
             if (entity1.type == Entity::WALL) continue;
             for (int j = 0; j < entities->length(); j++) {
                 if (i == j) continue;
-                get_collisions(entities, i, j, &collisions, time_so_far);
+                get_collisions(entities, i, j, collisions, time_so_far);
             }
         }
-        sort<Collision, compare_collisions>(collisions.raw(), collisions.length());
+        sort<Collision, compare_collisions>(collisions->raw(), collisions->length());
 
         rat64 time_of_impact_that_matters = rat64::nan();
-        for (int i = 0; i < collisions.length(); i++) {
-            Collision collision = collisions[i];
+        for (int i = 0; i < collisions->length(); i++) {
+            Collision collision = (*collisions)[i];
             if (time_of_impact_that_matters != rat64::nan() && time_of_impact_that_matters != collision.time) {
                 // we thought we'd hit this later, but since we've already changed course earlier in this frame,
                 // let's don't believe this and recalculate everything from scratch.

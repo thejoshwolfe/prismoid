@@ -27,16 +27,17 @@ void init_entities() {
 
 void run_the_game() {
     Coord acceleration = {0, 0};
-    if (input_state[INPUT_UP])
-        acceleration.y -= 100;
     if (input_state[INPUT_LEFT])
         acceleration.x -= 100;
-    if (input_state[INPUT_DOWN])
-        acceleration.y += 100;
     if (input_state[INPUT_RIGHT])
         acceleration.x += 100;
 
+    // gravity
+    acceleration.y += 300;
+
     get_you()->velocity += acceleration;
 
-    step_physics(&entities);
+
+    List<Collision> collisions;
+    step_physics(&entities, &collisions);
 }
