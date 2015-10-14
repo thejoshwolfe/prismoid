@@ -72,7 +72,7 @@ void display_init() {
     window = SDL_CreateWindow("Prismoid", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0);
     if (window == nullptr)
         panic("window create failed");
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == nullptr)
         panic("renderer create failed");
 
@@ -134,28 +134,31 @@ void display_finish() {
     SDL_Quit();
 }
 
-static int64_t last_display_time; // milliseconds
-static int elapsed_time = 0; // will be 0 on first frame
-void delay_until_next_frame() {
-    int64_t now = SDL_GetTicks();
-    int64_t sleep_time = (last_display_time + 17) - now; // 60Hz or whatever
-
-    if (sleep_time > 0)
-        SDL_Delay((Uint32)sleep_time);
-
-    int64_t current_time = SDL_GetTicks();
-    elapsed_time = (int)(current_time - last_display_time);
-    last_display_time = current_time;
+static const int FRAME_TIME_HISTORY_SIZE = 20;
+static int64_t frame_time_history[FRAME_TIME_HISTORY_SIZE]; // milliseconds
+static int frame_time_history_cursor = 0;
+static bool frame_time_history_is_usable = false;
+static int current_fps = 0;
+static void measure_time() {
+    int64_t current_time = (int64_t)SDL_GetTicks();
+    int64_t clobbered_time = frame_time_history[frame_time_history_cursor];
+    frame_time_history[frame_time_history_cursor] = current_time;
+    frame_time_history_cursor++;
+    if (frame_time_history_cursor == FRAME_TIME_HISTORY_SIZE) {
+        frame_time_history_cursor = 0;
+        frame_time_history_is_usable = true;
+    }
+    if (frame_time_history_is_usable) {
+        int elapsed_time = (int)(current_time - clobbered_time);
+        current_fps = (1000 * FRAME_TIME_HISTORY_SIZE + elapsed_time / 2)/ elapsed_time;
+    }
 }
 static String get_debug_string() {
     String result = new_string();
-    result->append("fps: ");
-    if (elapsed_time != 0) {
-        int fps = 1000 / (int)elapsed_time;
-        result->format("%d", fps);
-    } else {
-        result->append('?');
-    }
+    if (frame_time_history_is_usable)
+        result->format("fps: %d", current_fps);
+    else
+        result->format("fps: ??");
 
     result->format("  input: %s%s%s%s%s",
         input_state[INPUT_UP]    ? "1" : "0",
@@ -237,4 +240,6 @@ void render(List<Entity> * entities) {
     render_text(get_debug_string(), 0, window_height - 17 * 2);
 
     SDL_RenderPresent(renderer);
+
+    measure_time();
 }

@@ -13,8 +13,6 @@ int main() {
         run_the_game();
 
         render(&entities);
-
-        delay_until_next_frame();
     }
 
     display_finish();
