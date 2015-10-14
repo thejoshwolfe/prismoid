@@ -1,7 +1,7 @@
 .PHONY: all
 all:
 
-OBJECT_NAMES = resources.o util.o display.o byte_buffer.o load_image.o string.o input.o physics.o
+OBJECT_NAMES = resources.o util.o display.o byte_buffer.o load_image.o string.o input.o game.o physics.o
 
 CPP_FLAGS += -fsanitize=address -fno-omit-frame-pointer -fno-exceptions -fno-rtti -Ibuild/native -Isrc -g -Wall -Wextra -Werror
 COMPILE_CPP = $(CROSS_PREFIX)g++ -c -std=c++14 -o $@ -MMD -MP -MF $@.d $(CPP_FLAGS) $(shell $(CROSS_PREFIX)pkg-config --cflags SDL2_ttf sdl2 libpng) $<

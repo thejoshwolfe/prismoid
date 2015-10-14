@@ -6,13 +6,14 @@
 #include "string.hpp"
 #include "input.hpp"
 #include "physics.hpp"
+#include "game.hpp"
 
 #include <rucksack/rucksack.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-static const int window_width = 400;
-static const int window_height = 400;
+static const int window_width = 800;
+static const int window_height = 600;
 static const SDL_Color black      = {0x00, 0x00, 0x00, 0xff};
 static const SDL_Color dark_green = {0x00, 0x88, 0x00, 0xff};
 static const SDL_Color white      = {0xff, 0xff, 0xff, 0xff};
@@ -27,7 +28,7 @@ static RuckSackImage ** spritesheet_images;
 
 static RuckSackImage * man_stand_image;
 
-TTF_Font * font;
+static TTF_Font * font;
 static unsigned char * font_buffer;
 static SDL_RWops * font_rw_ops;
 static String version_string = new_string();
@@ -39,7 +40,8 @@ static inline SDL_Point scale_to_screen(const Coord & coord) {
 
 static inline SDL_Point to_screen(const Coord & coord) {
     SDL_Point scaled = scale_to_screen(coord);
-    return SDL_Point{scaled.x + window_width/2, scaled.y + window_height/2};
+    SDL_Point camera_position = scale_to_screen(get_you()->bounds.position);
+    return SDL_Point{scaled.x - camera_position.x + window_width/2, scaled.y - camera_position.y + window_height/2};
 }
 static inline SDL_Rect to_screen(const Rect & rect) {
     SDL_Point position = to_screen(rect.position);
