@@ -50,6 +50,7 @@ static void test_physics() {
         {{32000, 86000}, {32000, 32000}},
         {0, 0},
     });
+    collisions.clear();
     step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving, but only in the x direction
@@ -71,6 +72,7 @@ static void test_physics() {
         {{32000, 86000}, {32000, 32000}},
         {0, 0},
     });
+    collisions.clear();
     step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving
@@ -92,6 +94,7 @@ static void test_physics() {
         {{24000, 0}, {32000, 32000}},
         {0, 0},
     });
+    collisions.clear();
     step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // not still moving left; banged head against surprise wall.
@@ -113,6 +116,7 @@ static void test_physics() {
         {{4000, -3000}, {3000, 3000}},
         {0, 0},
     });
+    collisions.clear();
     step_physics(&entities, &collisions);
     assert_no_overlaps(&entities);
     // still moving left; not run into the tiny wall

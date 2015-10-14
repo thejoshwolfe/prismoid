@@ -140,9 +140,9 @@ static inline bool apply_collision_vertical(Entity * entity, const Collision & c
 }
 
 void step_physics(List<Entity> * entities, List<Collision> * collisions) {
+    int collision_caring_window_start = collisions->length();
     rat64 time_so_far = {0,1};
     while (time_so_far < rat64{1,1}) {
-        collisions->clear();
         for (int i = 0; i < entities->length(); i++) {
             const Entity & entity1 = (*entities)[i];
             if (entity1.type == Entity::WALL) continue;
@@ -151,14 +151,16 @@ void step_physics(List<Entity> * entities, List<Collision> * collisions) {
                 get_collisions(entities, i, j, collisions, time_so_far);
             }
         }
-        sort<Collision, compare_collisions>(collisions->raw(), collisions->length());
+        sort<Collision, compare_collisions>(collisions->raw() + collision_caring_window_start, collisions->length() - collision_caring_window_start);
 
         rat64 time_of_impact_that_matters = rat64::nan();
-        for (int i = 0; i < collisions->length(); i++) {
+        for (int i = collision_caring_window_start; i < collisions->length(); i++) {
             Collision collision = (*collisions)[i];
             if (time_of_impact_that_matters != rat64::nan() && time_of_impact_that_matters != collision.time) {
                 // we thought we'd hit this later, but since we've already changed course earlier in this frame,
-                // let's don't believe this and recalculate everything from scratch.
+                // let's don't believe this and recalculate everything from now onward.
+                collisions->resize(i);
+                collision_caring_window_start = i;
                 goto start_over;
             }
             Entity * entity = &(*entities)[collision.entity_index1];
