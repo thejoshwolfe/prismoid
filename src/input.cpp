@@ -7,6 +7,7 @@
 bool request_shutdown = false;
 
 bool input_state[INPUT_COUNT];
+bool input_just_pressed[INPUT_COUNT];
 
 static bool get_input_id_for_key_event(const SDL_KeyboardEvent & event, InputId * out_result) {
     switch (event.keysym.scancode) {
@@ -22,6 +23,9 @@ static bool get_input_id_for_key_event(const SDL_KeyboardEvent & event, InputId 
         case SDL_SCANCODE_D:
             *out_result = INPUT_RIGHT;
             return true;
+        case SDL_SCANCODE_K:
+            *out_result = INPUT_JUMP;
+            return true;
         default:
             return false;
     }
@@ -31,10 +35,14 @@ static void handle_key_event(const SDL_KeyboardEvent & event) {
     InputId input_id;
     if (!get_input_id_for_key_event(event, &input_id))
         return;
-    input_state[input_id] = (event.type == SDL_KEYDOWN);
+    bool is_down = event.type == SDL_KEYDOWN;
+    if (is_down) input_just_pressed[input_id] = !input_state[input_id];
+    input_state[input_id] = is_down;
 }
 
 void read_input() {
+    for (int i = 0; i < INPUT_COUNT; i++)
+        input_just_pressed[i] = false;
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {

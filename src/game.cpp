@@ -35,7 +35,7 @@ void run_the_game() {
         acceleration.x += 250;
 
     // jomp
-    if (is_on_ground && input_state[INPUT_UP])
+    if (is_on_ground && input_just_pressed[INPUT_JUMP])
         acceleration.y -= 10000;
 
     // gravity

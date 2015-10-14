@@ -157,11 +157,12 @@ static String get_debug_string() {
         result->append('?');
     }
 
-    result->format("  input: %s%s%s%s",
+    result->format("  input: %s%s%s%s%s",
         input_state[INPUT_UP]    ? "1" : "0",
         input_state[INPUT_LEFT]  ? "1" : "0",
         input_state[INPUT_DOWN]  ? "1" : "0",
-        input_state[INPUT_RIGHT] ? "1" : "0");
+        input_state[INPUT_RIGHT] ? "1" : "0",
+        input_state[INPUT_JUMP]  ? "1" : "0");
     return result;
 }
 
